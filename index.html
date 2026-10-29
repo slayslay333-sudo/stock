@@ -134,6 +134,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;f
 button.tm{font:inherit;font-weight:inherit;color:inherit;background:none;border:0;padding:0;border-radius:0;border-bottom:1.5px dotted var(--gold);cursor:pointer;line-height:inherit;letter-spacing:inherit}
 button.tm:hover{color:var(--gold)}
 .gterm{display:flex;flex-direction:column;gap:4px}
+.nlink{display:inline-flex;align-items:center;gap:2px;padding:6px 10px;border-radius:10px;background:var(--gold-soft);color:var(--ink);font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap}
+.nlink:hover{text-decoration:underline;text-decoration-color:var(--gold)}
+.nlink.sm{padding:2px 8px;font-size:11.5px;margin-left:6px;vertical-align:1px}
+
 .fbox{background:var(--accent-soft);border-radius:14px;padding:14px 12px;text-align:center;font-weight:700;font-size:17px;letter-spacing:-.02em;color:var(--ink)}
 .gterm .fbox{font-size:14px;padding:9px 10px;text-align:left}
 .rhow{font-size:13px;color:var(--muted);line-height:1.65}
@@ -465,7 +469,7 @@ function renderHoldings(){
     +'<div><div class="k">평가금액</div><div class="n">'+money(r.val,m)+'</div></div>'
     +'<div><div class="k">평가손익</div><div class="n '+cls(r.pl)+'">'+signed(r.pl,m)+'</div></div></div>'
     +'<div class="small muted">'+(h.priceAt?"현재가 기준: "+esc(h.priceAt):"현재가는 직접 입력하거나 새로고침하세요")+'</div>'
-    +'<div class="acts">'+(m==="US"&&h.symbol?'<button class="ghost" data-q="'+h.id+'">시세</button>':"")+'<button class="ghost" data-calc="'+h.id+'">물타기 계산</button><button class="ghost" data-edit="'+h.id+'">수정</button></div></div>'}).join("")+'</div>';
+    +'<div class="acts">'+nlink(nq(h.name,h.symbol))+(m==="US"&&h.symbol?'<button class="ghost" data-q="'+h.id+'">시세</button>':"")+'<button class="ghost" data-calc="'+h.id+'">물타기 계산</button><button class="ghost" data-edit="'+h.id+'">수정</button></div></div>'}).join("")+'</div>';
 }
 $("#holdingList").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.edit)return holdingSheet(S.holdings.find(h=>h.id===b.dataset.edit));
@@ -604,7 +608,7 @@ function renderWatch(){const el=$("#watchList");
     +'<span class="n">'+money(num(w.price),m)+'</span></div>'
     +'<div class="top small"><span class="muted">'+esc(w.priceAt||"가격 없음")+'</span><span class="n '+cls(num(w.change))+'">'+(w.change!=null?signed(num(w.change),m)+" ("+pct(num(w.changePct))+")":"")+'</span></div>'
     +(w.memo?'<div class="small" style="white-space:pre-wrap">'+esc(w.memo)+'</div>':"")
-    +'<div class="acts">'+(m==="US"&&w.symbol?'<button class="ghost" data-wq="'+w.id+'">시세</button>':"")+'<button class="ghost" data-wedit="'+w.id+'">수정</button></div></div>'}).join("")+'</div>'}
+    +'<div class="acts">'+nlink(nq(w.name,w.symbol))+(m==="US"&&w.symbol?'<button class="ghost" data-wq="'+w.id+'">시세</button>':"")+'<button class="ghost" data-wedit="'+w.id+'">수정</button></div></div>'}).join("")+'</div>'}
 $("#watchList").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.wedit)return watchSheet(S.watch.find(w=>w.id===b.dataset.wedit));
   if(b.dataset.wq){const w=S.watch.find(x=>x.id===b.dataset.wq);b.disabled=true;b.textContent="불러오는 중";
@@ -842,6 +846,10 @@ function renderGloss(){const cats=["전체","오늘 브리핑"].concat([...new S
 $("#gq").addEventListener("input",renderGloss);
 $("#gCats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;G.cat=b.dataset.c;renderGloss()});
 
+
+/* ---------- 종목정보: 네이버 증권으로 연결 ---------- */
+function nq(name,sym){name=String(name||"");return /[가-힣]/.test(name)?name:(sym||name)}
+function nlink(q,small){if(!q)return"";return'<a class="nlink'+(small?" sm":"")+'" href="https://search.naver.com/search.naver?query='+encodeURIComponent(String(q)+" 주가")+'" target="_blank" rel="noopener">종목정보 ↗</a>'}
 /* ---------- 브리핑 ---------- */
 const B={list:[],notes:{},seg:"kr",sel:"",loaded:false};
 buildTerms();
@@ -869,7 +877,7 @@ function marketBlock(m,label){
   if(m.summary)h+='<div class="card"><h2>무슨 일이 있었나</h2><div class="para">'+hl(m.summary)+'</div></div>';
   if(m.flows)h+='<div class="card"><h2>누가 사고팔았나</h2><div class="para">'+hl(m.flows)+'</div></div>';
   const st=arr(m.stocks);
-  if(st.length)h+='<div class="card"><h2>많이 움직인 종목</h2>'+st.map(s=>'<div class="sec"><span class="tag n '+dirCls(s.move)+'">'+esc(s.move||"")+'</span><div style="min-width:0"><b>'+esc(s.name)+'</b><div class="small">'+hl(s.reason)+'</div></div></div>').join("")+'<div class="small muted">어떤 종목이 왜 움직였는지 보여 주는 것이며, 사라는 뜻이 아닙니다.</div></div>';
+  if(st.length)h+='<div class="card"><h2>많이 움직인 종목</h2>'+st.map(s=>'<div class="sec"><span class="tag n '+dirCls(s.move)+'">'+esc(s.move||"")+'</span><div style="min-width:0"><b>'+esc(s.name)+'</b>'+nlink(s.name,true)+'<div class="small">'+hl(s.reason)+'</div></div></div>').join("")+'<div class="small muted">어떤 종목이 왜 움직였는지 보여 주는 것이며, 사라는 뜻이 아닙니다.</div></div>';
   const sc=arr(m.sectors);
   if(sc.length)h+='<div class="card"><h2>많이 움직인 업종</h2>'+sc.map(s=>{const c=s.dir==="down"?"down":s.dir==="up"?"up":"";return'<div class="sec"><span class="tag '+c+'">'+(s.dir==="down"?"하락":s.dir==="up"?"상승":"보합")+'</span><div><b>'+esc(s.name)+'</b><div class="small">'+hl(s.reason)+'</div></div></div>'}).join("")+'</div>';
   const nw=arr(m.news);

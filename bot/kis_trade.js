@@ -1,6 +1,6 @@
 // 가상계좌(paper/state.json)의 '목표 보유'를 한투 계좌에 맞춰 주문
 // 기본은 확인만(주문 안 냄). 실제 주문: node kis_trade.js --live
-// 실행 시점: 매주 월요일 밤(한국 시간) 미국 장 열리기 전. 모의는 장 중에 지정가로 체결.
+// 실행 시점: 매주 화요일 0시 5분(한국 시간) = 미국 월요일 장 중.
 const fs=require('fs'),path=require('path');const {KIS}=require('./kis.js');
 const cfg=JSON.parse(fs.readFileSync(path.join(__dirname,'config.json'),'utf8'));
 async function main(opt={}){
@@ -21,9 +21,10 @@ async function main(opt={}){
     if(qty>0)plan.push({side:'buy',symb:st.target,qty,price:lim,note:sellCash>0?'매도 대금 포함 계산 — 매도 체결 뒤 주문':''});
     else say('살 돈이 부족합니다 (주문 가능 '+b.cash.toFixed(2)+'달러)')}
   if(!plan.length){say('주문할 것 없음 — 이미 목표대로 보유 중');return {out,plan,kis}}
-  for(const x of plan){const dv=kis.c.mode==='demo'?'00':(x.side==='buy'?'32':'31');
-    const price=x.side==='sell'&&kis.c.mode==='demo'?+(x.price*0.99).toFixed(2):x.price;
-    say(`${x.side==='buy'?'매수':'매도'} ${x.symb} ${x.qty}주 @ ${price} (${dv==='00'?'지정가':dv==='32'?'장개시지정가':'장개시시장가'}) ${x.note||''}`);
+  // 미국 장 중에 실행: 모의·실전 모두 지정가(00). 매수는 현재가+1%, 매도는 현재가-1%로 넣어 바로 체결되게 함
+  for(const x of plan){const dv='00';
+    const price=x.side==='sell'?+(x.price*0.99).toFixed(2):x.price;
+    say(`${x.side==='buy'?'매수':'매도'} ${x.symb} ${x.qty}주 @ ${price} (지정가) ${x.note||''}`);
     if(live){try{const r=await kis.order(x.side,A[x.symb].주문거래소,x.symb,x.qty,price,dv);say('  접수 번호 '+(r&&r.ODNO))}catch(e){say('  주문 실패: '+e.message);x.error=e.message}}}
   return {out,plan,kis}}
 if(require.main===module)main().catch(e=>{console.error('오류:',e.message);process.exit(1)});

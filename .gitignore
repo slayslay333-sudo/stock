@@ -1,5 +1,7 @@
-# 한투 비밀값·토큰은 절대 올리지 않음
 kis.json
 .kis/
 token_*.json
 *.key
+bot/logs/
+bot/raw/
+alphavantage.txt

@@ -31,7 +31,7 @@ class KIS{
       {CANO:this.c.cano,ACNT_PRDT_CD:this.c.prdt,OVRS_EXCG_CD:excg,OVRS_ORD_UNPR:String(price),ITEM_CD:symb});
     return {cash:+j.output.ord_psbl_frcr_amt,maxQty:+(j.output.max_ord_psbl_qty??j.output.ovrs_max_ord_psbl_qty??0)}}
   // 주문. 매수 실전 TTTT1002U / 모의 VTTT1002U. 매도 실전 TTTT1006U / 모의 VTTT1001U(공식 설명 기준; 실패 시 VTTT1006U 재시도)
-  // 모의는 지정가(00)만 가능. 실전 매수는 장개시지정가(32), 실전 매도는 장개시시장가(31) 사용
+  // 모의는 지정가(00)만 가능. 실전도 장 중에 지정가(00)로 넣음
   async order(side,excg,symb,qty,price,ordDvsn){
     const body={CANO:this.c.cano,ACNT_PRDT_CD:this.c.prdt,OVRS_EXCG_CD:excg,PDNO:symb,ORD_QTY:String(qty),OVRS_ORD_UNPR:price.toFixed(2),
       CTAC_TLNO:'',MGCO_APTM_ODNO:'',SLL_TYPE:side==='sell'?'00':'',ORD_SVR_DVSN_CD:'0',ORD_DVSN:ordDvsn};

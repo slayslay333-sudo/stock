@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>전략 10개 비교</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Roboto:wght@400;500;700&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+/* 티타늄 계기판 톤(장부와 같은 색). 위: 목표 대비 결과 계기판 → 규칙 조절판 → 그래프 → 월별 성적 → 거래 기록 */
+:root{--bg:#ECEEF1;--surface:#FFFFFF;--surface-2:#F6F7F9;--line:#E3E6EB;--hair:#D3D8DF;--ink:#15181D;--muted:#78808C;--accent:#23272E;--accent-ink:#fff;--accent-soft:#EEF0F3;--gold:#B48D55;--gold-soft:#F6EFE4;--up:#EE4452;--down:#3A78F2;--up-wash:#FFF1F2;--down-wash:#EFF4FF;--warn:#A8650A;--warn-soft:#FFF5E6;--shadow:rgba(30,36,48,.10);
+--font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;--num:"Roboto","Noto Sans KR",sans-serif;--display:"Barlow Condensed","Roboto",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#181B20;--surface-2:#1E2228;--line:#272B32;--hair:#33383F;--ink:#ECEEF1;--muted:#8D949F;--accent:#E8EBEF;--accent-ink:#121418;--accent-soft:#23272E;--gold:#D7B67F;--gold-soft:#2A251D;--up:#FF6672;--down:#629AFF;--up-wash:#2A1B1D;--down-wash:#172036;--warn:#F0B45A;--warn-soft:#2C2416;--shadow:rgba(0,0,0,.45);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101215;--surface:#181B20;--surface-2:#1E2228;--line:#272B32;--hair:#33383F;--ink:#ECEEF1;--muted:#8D949F;--accent:#E8EBEF;--accent-ink:#121418;--accent-soft:#23272E;--gold:#D7B67F;--gold-soft:#2A251D;--up:#FF6672;--down:#629AFF;--up-wash:#2A1B1D;--down-wash:#172036;--warn:#F0B45A;--warn-soft:#2C2416;--shadow:rgba(0,0,0,.45);color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 80px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:24px;font-weight:800;letter-spacing:-.03em;margin:0}h2{font-size:16px;font-weight:700;margin:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--gold)}.muted{color:var(--muted)}.small{font-size:13px}
+.n{font-family:var(--num);font-variant-numeric:tabular-nums}.up{color:var(--up)}.down{color:var(--down)}
+.card{background:var(--surface);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 0 1px var(--line),0 10px 24px -18px var(--shadow)}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:11px 14px;font-size:13px}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.g{background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0;container-type:inline-size}
+.g .k{font-size:12px;color:var(--muted)}.g .v{font-family:var(--display);font-weight:600;font-size:30px;font-size:min(34px,24cqi);line-height:1.05}
+.g .s{font-size:12px;font-weight:700}
+.verdict{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th,.tbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{color:var(--muted);font-weight:500}.scroll{overflow-x:auto}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+label b{color:var(--ink);font-weight:700}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+input[type=range]{padding:0;accent-color:var(--gold)}
+.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}.check input{width:auto}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:700;font-size:14px;border-radius:12px;border:1px solid var(--hair);background:var(--surface);color:var(--ink);padding:10px 15px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--line)}.chart .lab{fill:var(--muted);font-size:11px;font-family:var(--num)}
+.chart .s1{fill:none;stroke:var(--gold);stroke-width:2.2}.chart .s2{fill:none;stroke:var(--hair);stroke-width:1.6}.chart .split{stroke:var(--muted);stroke-dasharray:4 4}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:3px}
+.heat{display:grid;grid-template-columns:44px repeat(12,1fr);gap:2px;font-size:10.5px;font-family:var(--num)}
+.heat div{padding:4px 0;text-align:center;border-radius:4px}.heat .h{color:var(--muted)}
+details summary{cursor:pointer;font-weight:700}
+@media (max-width:560px){.gauges{grid-template-columns:repeat(2,1fr)}.fields{grid-template-columns:repeat(2,1fr)}.heat{font-size:9px;grid-template-columns:34px repeat(12,1fr)}}
+</style>
+<style>.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--gold-soft);color:var(--gold)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box{background:var(--surface-2);border-radius:14px;padding:12px 14px}.box .k{font-size:12px;color:var(--muted)}.box .v{font-weight:700;font-size:16px}
+nav.top{display:flex;gap:14px;font-size:13px}nav.top a{color:var(--muted);text-decoration:none;font-weight:700}nav.top a.on{color:var(--ink);border-bottom:2px solid var(--gold)}
+@media (max-width:560px){.row2{grid-template-columns:1fr}}</style>
+<style>
+.rank{width:100%;border-collapse:collapse;font-size:13.5px}.rank td,.rank th{padding:10px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.rank th{color:var(--muted);font-weight:500;font-size:12px}
+.rank td:nth-child(2),.rank th:nth-child(2){text-align:left;white-space:normal}.rank td:first-child,.rank th:first-child{text-align:center;width:28px}
+.rank tr.s{cursor:pointer}.rank tr.s:hover td{background:var(--surface-2)}.nm{font-weight:700}.ds{font-size:12px;color:var(--muted);white-space:normal;line-height:1.45}
+.no{display:inline-flex;width:24px;height:24px;border-radius:8px;background:var(--accent-soft);align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:var(--num)}
+.detail td{background:var(--surface-2);white-space:normal!important;text-align:left!important;font-size:13px}
+.heat2{display:grid;gap:2px;font-size:10.5px;font-family:var(--num)}.heat2 div{padding:5px 0;text-align:center;border-radius:4px;white-space:nowrap}.heat2 .h{color:var(--muted);text-align:left;padding-left:2px;font-family:var(--font)}
+.find{display:flex;flex-direction:column;gap:10px}.find .f{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}.find .f b.k{display:inline-flex;width:26px;height:26px;border-radius:9px;background:var(--gold-soft);color:var(--gold);align-items:center;justify-content:center;font-family:var(--num)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips label{flex-direction:row;align-items:center;gap:5px;font-size:12px;color:var(--ink);background:var(--surface-2);border-radius:99px;padding:4px 10px;cursor:pointer}.chips input{width:auto;margin:0}
+.chart .ln{fill:none;stroke-width:1.7}
+@media (max-width:560px){.rank .ds,.rank tr.s td:first-child,.rank th:first-child,.rank tr.s td:nth-child(5),.rank th:nth-child(5){display:none}.rank .nm{white-space:nowrap}}
+.only-m{display:none}@media (max-width:560px){.only-m{display:inline}}
+.help{font-size:12.5px;color:var(--muted);line-height:1.55}.help b{color:var(--ink)}
+.good{color:var(--up);font-weight:700}.bad{color:var(--down);font-weight:700}
+</style>
+</head><body>
+<div class="wrap">
+ <nav class="top"><a href="./">주식 장부</a><a href="lab.html">전략 시험실</a><a href="paper.html">가상계좌</a><a class="on" href="strategies.html">전략 10개</a></nav>
+ <header><div class="eyebrow">가상계좌 10개 동시 운용 · 각 1,000만원 · 매주 자동</div><h1>전략 10개 비교</h1><div class="small muted" id="sub">불러오는 중…</div></header>
+
+ <section class="card"><h2>지금 순위 (실제 시세로 가상 운용)</h2>
+  <div class="scroll"><table class="rank" id="rank"></table></div>
+  <div class="help">줄을 누르면 전략 설명·가진 종목·다음 주 주문·거래 기록이 보입니다. 시작한 지 얼마 안 돼서 지금 순위는 거의 운입니다. 아래 과거 분석과 함께 보세요.</div></section>
+
+ <section class="card"><h2>분석 결론 <span class="small muted" id="adate"></span></h2><div class="find" id="find"></div></section>
+
+ <section class="card"><h2>과거 21년 성적 (2005년 1월부터, 수수료·세금 뺀 뒤)</h2>
+  <div class="scroll"><table class="tbl" id="past"></table></div>
+  <details class="help"><summary>칸 설명</summary>
+  <p><b>월평균</b>: 한 달 평균 수익률. <b>연평균</b>: 복리로 1년 평균. <b>최대 하락</b>: 가장 높았던 때에서 가장 많이 떨어진 폭. <b>뒤 10년</b>: 2016년부터 따로 새로 시작했을 때의 월평균(규칙을 만들 때 안 본 기간이라 더 믿을 만함). <b>1년 목표</b>: 아무 달에 시작해서 1년 들고 있었을 때 12.7%(월 1% 복리) 이상 번 비율. <b>1년 손해</b>: 같은 방식으로 1년 뒤 원금보다 줄어든 비율. <b>무작위 대비</b>: 같은 후보 종목 중 아무거나 골라 같은 주기로 갈아탄 경우 400번과 비교해, 이 전략보다 못한 경우의 비율(높을수록 운이 아니라 규칙 덕분일 가능성이 큼). <b>설정 바꿔도</b>: 판단 기간·평균선·손절을 조금씩 바꾼 27가지 중 뒤 10년 월평균 0.8% 이상이 나온 비율(높을수록 숫자를 우연히 잘 고른 게 아님).</p></details></section>
+
+ <section class="card"><h2>큰 하락장 때</h2><div class="scroll"><table class="tbl" id="crash"></table></div>
+  <div class="help">그 기간 동안 계좌가 몇 % 변했는지입니다. 나스닥 그냥 보유와 비교하면 각 전략이 얼마나 막아 줬는지 보입니다.</div></section>
+
+ <section class="card"><h2>해마다 성적</h2><div class="scroll"><div class="heat2" id="years"></div></div></section>
+
+ <section class="card"><h2>계좌 금액 흐름 (2005년 1,000만원 시작, 위아래 비율 눈금)</h2><div class="chips" id="pick"></div><div id="chart"></div></section>
+
+ <section class="card"><h2>전략끼리 닮은 정도</h2><div class="scroll"><div class="heat2" id="corr"></div></div>
+  <div class="help">2016년부터 매주 수익이 같이 움직인 정도입니다. 1이면 똑같이 움직임, 0이면 상관없음. 0.9 넘는 전략끼리는 둘 다 돌려도 얻는 정보가 적습니다.</div></section>
+
+ <div class="note"><b>꼭 알아두세요.</b> 가짜 돈으로 하는 기록과 과거 계산입니다. 수수료 0.25%, 미국 거래위원회 수수료, 양도세 22%(1년 250만원 공제)를 빼고, 1주 단위로만 사고, 환율은 1,350원 고정입니다. 과거 결과가 앞으로를 보장하지 않으며 투자 추천이 아닙니다.</div>
+</div>
+<script src="bot/engine.js"></script>
+<script>
+(async function(){
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pc=(v,d=2)=>v==null?"-":(Math.abs(v)<Math.pow(10,-d)/2?(0).toFixed(d):(v>0?"+":"")+v.toFixed(d))+"%",cl=v=>v>0.004?"up":v<-0.004?"down":"",man=v=>Math.round(v).toLocaleString("ko-KR")+"만원";
+let M,A;
+try{[M,A]=await Promise.all(["paper/multi.json","paper/analysis.json"].map(u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})))}
+catch(e){$("#sub").textContent="자료를 불러오지 못했습니다. 잠시 뒤 새로 고침해 주세요.";return}
+const S=Object.fromEntries(M.strategies.map(s=>[s.id,s])),R=Object.fromEntries(A.rows.map(r=>[r.id,r]));
+$("#sub").textContent=M.from+" 다음 주부터 시작 · 마지막 자료 "+M.dataUntil+" 주 · 갱신 "+new Date(M.updated).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"});
+// 순위
+const started=M.strategies.some(s=>s.log.length);
+let h='<tr><th>순위</th><th>전략</th><th>지금 금액</th><th>수익률</th><th>다음 주 주문</th></tr>';
+M.rank.forEach((id,i)=>{const s=S[id];h+='<tr class="s" data-id="'+id+'"><td>'+(started?i+1:"-")+'</td><td><span class="no">'+id+'</span> <span class="nm">'+esc(s.name)+'</span><div class="ds">'+esc(s.desc)+'</div></td><td class="n">'+man(s.value)+'</td><td class="n '+cl(s.ret)+'">'+pc(s.ret)+'</td><td style="white-space:normal;text-align:left;font-size:12.5px">'+(s.pending.length?s.pending.map(p=>esc(p.act+" "+p.name)).join("<br>"):"그대로")+'</td></tr><tr class="detail" id="d'+id+'" hidden><td colspan="5"></td></tr>'});
+$("#rank").innerHTML=h;
+$("#rank").onclick=e=>{const tr=e.target.closest("tr.s");if(!tr)return;const id=tr.dataset.id,d=$("#d"+id),s=S[id];
+ if(d.hidden){d.firstChild.innerHTML='<span class="only-m">'+esc(s.desc)+'<br><b>다음 주 주문</b>: '+(s.pending.length?s.pending.map(p=>esc(p.act+" "+p.name)).join(", "):"그대로")+'<br></span><b>가진 것</b>: '+(s.holdings.length?s.holdings.map(x=>esc(x.name)+" "+x.shares+"주 ("+man(x.valueMan)+")").join(", "):"없음")+' · 현금 '+man(s.cashMan)+'<br><b>미리 해 본 결과</b>: '+s.reh.map(r=>r.name+' <span class="'+cl(r.ret)+'">'+pc(r.ret,1)+'</span>').join(" · ")+'<br><b>거래 기록</b>: '+(s.log.length?s.log.slice(-12).reverse().map(x=>x.week+" "+x.act+" "+esc(x.name)+" "+x.shares+"주 @"+x.price.toFixed(2)+"달러 ("+esc(x.why)+")").join("<br>"):"아직 없음")}
+ d.hidden=!d.hidden};
+// 결론 (2026-11-02 분석. 숫자는 매주 자동 갱신되는 표를 따름)
+$("#adate").textContent="· 자료 "+A.dataUntil+" 기준";
+const r=R,F=[
+ ["과거 21년 동안 수익률로는 '나스닥 그냥 보유'(10번)를 이긴 전략이 없습니다.","10번은 연평균 "+r[10].full.cagr.toFixed(1)+"%였지만 최대 "+r[10].full.mdd.toFixed(0)+"%까지 떨어진 적이 있습니다(2008년). 나머지 전략들은 수익을 덜 내는 대신 하락을 줄이는 쪽입니다. 10번은 판 적이 없어서 세금이 아직 안 나갔다는 점도 감안해야 합니다(팔면 그때 냄)."],
+ ["'월 1%'에 가장 가까운 건 5번 나스닥·금 반반이지만, 결과를 보고 고른 위험이 큽니다.","월평균 "+r[5].full.avg.toFixed(2)+"%, 최대 하락 "+r[5].full.mdd.toFixed(0)+"%로 표에서 가장 균형이 좋습니다. 하지만 나스닥과 금이 지난 20년 가장 많이 오른 것들이라, 지금 알고 고른 효과가 섞여 있습니다. 앞으로도 그럴지는 모릅니다."],
+ ["지금 전략(1번)은 운이 아닌 쪽에 가깝지만, 목표인 월 1%에는 조금 못 미칩니다.","같은 후보로 무작위 선택한 경우 400번 중 "+r[1].luck.beat.toFixed(0)+"%보다 나았고, 설정을 조금 바꿔도 "+r[1].nb.share08.toFixed(0)+"%가 월 0.8% 이상이었습니다. 다만 2016년부터 새로 시작하면 월평균 "+r[1].oos.avg.toFixed(2)+"%, 2005년부터는 "+r[1].full.avg.toFixed(2)+"%입니다. 21년간 낸 세금이 약 "+man(r[1].full.tax)+"으로 수익을 꽤 깎았습니다."],
+ ["1번의 '10% 손절'은 21년 동안 한 번도 실행된 적이 없습니다.","추세가 꺾이면 손절선에 닿기 전에 먼저 팔기 때문입니다. 그래서 원래 계획한 '손절 없음' 전략은 1번과 결과가 완전히 같아 빼고, 그 자리에 5번을 넣었습니다."],
+ ["후보를 넓히면(7번, 8번) 오히려 나빠졌습니다.","7번은 무작위 선택보다 나은 비율이 "+r[7].luck.beat.toFixed(0)+"%, 8번은 "+r[8].luck.beat.toFixed(0)+"%로 절반도 안 됩니다. 매주 가장 강한 종목을 쫓는 방식이 이 후보들에서는 통하지 않았다는 뜻입니다. 가상계좌에서 실제로도 그런지 계속 봅니다."],
+ ["4번 느린 반응은 뒤 10년이 좋지만 앞 10년은 약했습니다.","뒤 10년 월평균 "+r[4].oos.avg.toFixed(2)+"%, 앞 10년 "+r[4].is.avg.toFixed(2)+"%. 설정을 바꿔도 잘 버텼습니다("+r[4].nb.share08.toFixed(0)+"%). 시기를 타는 전략일 수 있어 지켜볼 후보입니다."],
+ ["1년 단위로 보면 어느 전략이든 손해 보는 해가 꽤 있습니다.","아무 달에 시작해 1년 들고 있었을 때 손해였던 비율: 1번 "+r[1].roll.loss.toFixed(0)+"%, 5번 "+r[5].roll.loss.toFixed(0)+"%, 10번 "+r[10].roll.loss.toFixed(0)+"%. 실제 돈은 최소 6개월~1년 가상 운용을 보고 넣는 게 맞습니다."]];
+$("#find").innerHTML=F.map((f,i)=>'<div class="f"><b class="k">'+(i+1)+'</b><div><b>'+f[0]+'</b><div class="small muted">'+f[1]+'</div></div></div>').join("");
+// 과거 표
+const ord=A.rows.slice().sort((a,b)=>b.full.avg-a.full.avg);
+$("#past").innerHTML='<tr><th>전략</th><th>월평균</th><th>연평균</th><th>최대 하락</th><th>뒤 10년</th><th>1년 목표</th><th>1년 손해</th><th>무작위 대비</th><th>설정 바꿔도</th><th>세금 낸 돈</th></tr>'+ord.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td><td class="n '+cl(x.full.avg)+'">'+pc(x.full.avg)+'</td><td class="n">'+pc(x.full.cagr,1)+'</td><td class="n down">'+x.full.mdd.toFixed(0)+'%</td><td class="n '+(x.oos.avg>=1?"good":"")+'">'+pc(x.oos.avg)+'</td><td class="n">'+x.roll.hitTarget.toFixed(0)+'%</td><td class="n">'+x.roll.loss.toFixed(0)+'%</td><td class="n '+(x.luck?(x.luck.beat>=90?"good":x.luck.beat<50?"bad":""):"")+'">'+(x.luck?x.luck.beat.toFixed(0)+"%":"-")+'</td><td class="n '+(x.nb?(x.nb.share08>=80?"good":x.nb.share08<30?"bad":""):"")+'">'+(x.nb?x.nb.share08.toFixed(0)+"%":"-")+'</td><td class="n">'+man(x.full.tax)+'</td></tr>').join("");
+$("#crash").innerHTML='<tr><th>전략</th>'+A.crashes.map(c=>'<th>'+c[0]+'<div class="small">'+c[1].slice(2)+'~'+c[2].slice(2)+'</div></th>').join("")+'</tr>'+A.rows.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td>'+x.crash.map(c=>'<td class="n '+cl(c[1])+'">'+pc(c[1],0)+'</td>').join("")+'</tr>').join("");
+// 해마다
+const yrs=A.rows[0].years.map(y=>y[0]);const wash=v=>{const a=Math.min(1,Math.abs(v)/30);return v>=0?"background:color-mix(in srgb,var(--up) "+(a*55+6)+"%,transparent)":"background:color-mix(in srgb,var(--down) "+(a*55+6)+"%,transparent)"};
+const yg=$("#years");yg.style.gridTemplateColumns="96px repeat("+yrs.length+",minmax(34px,1fr))";yg.style.minWidth=(96+yrs.length*36)+"px";
+yg.innerHTML='<div class="h"></div>'+yrs.map(y=>'<div class="h" style="text-align:center">'+y.slice(2)+'</div>').join("")+A.rows.map(x=>'<div class="h">'+x.id+'. '+esc(x.name)+'</div>'+x.years.map(y=>'<div style="'+wash(y[1])+'" title="'+y[0]+' '+y[1].toFixed(1)+'%">'+Math.round(y[1])+'</div>').join("")).join("");
+// 그래프
+const COL=["#B48D55","#3A78F2","#8E6CEF","#1E9E7A","#EE4452","#E08A1E","#5B6B7F","#C2559A","#2BA3B8","#15181D"];
+const on=new Set([1,5,9,10]);
+$("#pick").innerHTML=A.rows.map((x,i)=>'<label><input type="checkbox" value="'+x.id+'" '+(on.has(x.id)?"checked":"")+'><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+COL[i]+'"></i>'+x.id+'. '+esc(x.name)+'</label>').join("");
+function draw(){const W=720,H=260,pl=54,pr=10,pt=10,pb=24;const rs=A.rows.filter(x=>on.has(x.id));if(!rs.length){$("#chart").innerHTML="";return}
+ const all=rs.flatMap(x=>x.eq.map(e=>Math.log(e[1])));const lo=Math.min(...all),hi=Math.max(...all);const N=rs[0].eq.length;
+ const X=i=>pl+(W-pl-pr)*i/(N-1),Y=v=>pt+(H-pt-pb)*(1-(Math.log(v)-lo)/((hi-lo)||1));
+ let g="";[500,1000,2000,5000,10000,20000].filter(v=>Math.log(v)>=lo-0.05&&Math.log(v)<=hi+0.05).forEach(v=>{g+='<line class="grid" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text class="lab" x="'+(pl-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+v.toLocaleString("ko-KR")+'만</text>'});
+ [0,Math.floor(N/3),Math.floor(2*N/3),N-1].forEach(i=>{g+='<text class="lab" x="'+X(i)+'" y="'+(H-4)+'" text-anchor="middle">'+rs[0].eq[i][0].slice(0,4)+'</text>'});
+ rs.forEach(x=>{const c=COL[A.rows.indexOf(x)];g+='<polyline class="ln" stroke="'+c+'" points="'+x.eq.map((e,i)=>X(i).toFixed(1)+","+Y(e[1]).toFixed(1)).join(" ")+'"/>'});
+ $("#chart").innerHTML='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="전략별 계좌 금액 흐름">'+g+'</svg>'}
+$("#pick").onchange=e=>{const v=+e.target.value;e.target.checked?on.add(v):on.delete(v);draw()};draw();
+// 닮은 정도
+const cg=$("#corr"),ids=A.corr.ids;cg.style.gridTemplateColumns="96px repeat("+ids.length+",minmax(34px,1fr))";cg.style.minWidth=(96+ids.length*36)+"px";
+cg.innerHTML='<div class="h"></div>'+ids.map(i=>'<div class="h" style="text-align:center">'+i+'</div>').join("")+ids.map((a,ai)=>'<div class="h">'+a+'. '+esc(R[a].name)+'</div>'+A.corr.m[ai].map(v=>'<div style="background:color-mix(in srgb,var(--gold) '+Math.round(Math.max(0,v)*70)+'%,transparent)">'+v.toFixed(2)+'</div>').join("")).join("");
+})();
+</script></body></html>

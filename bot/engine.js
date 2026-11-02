@@ -58,6 +58,36 @@ function run(D,p){p=Object.assign({},DEF,p);
     pending:pend.map(([s,act,a,why])=>({kind:s.kind,act:act==="sell"?"매도":"매수",asset:act==="sell"?s.a:a,why})),
     sleeves:sl.map(s=>({kind:s.kind,cash:s.cash/fxUsd,asset:s.a,shares:s.sh,entry:s.entry,cost:s.cost/fxUsd,price:s.a?C[s.a][li]:null,value:(s.cash+(s.sh?s.sh*C[s.a][li]:0))/fxUsd,stopped:s.stopped}))};
 }
+/* 고정 비율 전략: 정해진 비율로 사서 들고 있다가, 달이 바뀐 첫 주에(rebalM개월마다) 비율을 다시 맞춤.
+   w={SPY:0.6,TLT:0.4}. rebalM=0 이면 처음에 사고 계속 보유. 신호는 그 주 종가, 체결은 다음 주 시가(회전 전략과 같음). */
+function runFixed(D,p){p=Object.assign({},DEF,{rebalM:1},p);
+  const T=D.dates,A=D.assets,n=T.length,fee=p.fee/100,sec=p.sec/100,fxUsd=1e4/p.fx,W=p.w,ks=Object.keys(W);
+  const C={},O={};for(const k of ks){C[k]=A[k].map(r=>r[2]);O[k]=A[k].map(r=>r[0])}
+  let cash=p.start*fxUsd,realized=0,yr=null,taxPaid=0,feePaid=0,log=[],eq=[],pend=false,started=false,lastM=null,mCount=0;
+  const sh={},cost={};for(const k of ks){sh[k]=0;cost[k]=0}
+  const val=i=>cash+ks.reduce((s,k)=>s+sh[k]*C[k][i],0);
+  for(let i=0;i<n;i++){
+    if(T[i]<p.from||T[i]>p.to)continue;
+    const y=T[i].slice(0,4);
+    if(yr&&y!==yr){const tax=Math.max(0,realized-p.ded*fxUsd)*p.tax/100;taxPaid+=tax;realized=0;
+      if(cash>=tax)cash-=tax;else{let need=tax-cash;cash=0;for(const k of ks){if(need<=0)break;if(!sh[k])continue;const px=C[k][i-1];const q=Math.min(sh[k],Math.ceil(need/(px*(1-fee-sec))));const g=q*px,f=g*(fee+sec);feePaid+=f;realized+=g-f-cost[k]*q/sh[k];cost[k]*=(sh[k]-q)/sh[k];sh[k]-=q;cash+=g-f;need-=g-f;log.push([T[i],"고정","매도",k,px,"세금 낼 현금",q])}cash=Math.max(0,cash-Math.max(0,need))}}
+    yr=y;
+    if(pend){ // 다음 주 시가로 비율 맞추기: 먼저 팔고, 그다음 사기
+      const tot=cash+ks.reduce((s,k)=>s+sh[k]*O[k][i],0);const tgt={};for(const k of ks)tgt[k]=p.whole?Math.floor(tot*W[k]/(O[k][i]*(1+fee))):tot*W[k]/(O[k][i]*(1+fee));
+      for(const k of ks)if(sh[k]>tgt[k]){const q=sh[k]-tgt[k],px=O[k][i],g=q*px,f=g*(fee+sec);feePaid+=f;const c=cost[k]*q/sh[k];realized+=g-f-c;cost[k]-=c;sh[k]-=q;cash+=g-f;log.push([T[i],"고정","매도",k,px,started?"비율 맞추기":"시작",q])}
+      for(const k of ks)if(sh[k]<tgt[k]){let q=tgt[k]-sh[k];const px=O[k][i];if(p.whole)q=Math.min(q,Math.floor(cash/(px*(1+fee))));else q=Math.min(q,cash/(px*(1+fee)));if(q<=0)continue;const amt=q*px,f=amt*fee;feePaid+=f;sh[k]+=q;cost[k]+=amt+f;cash-=amt+f;log.push([T[i],"고정","매수",k,px,started?"비율 맞추기":"시작",q])}
+      if(cash<0)cash=0;pend=false;started=true}
+    eq.push([T[i],val(i)/fxUsd]);
+    const m=T[i].slice(0,7);
+    if(!started)pend=true;
+    else if(p.rebalM>0&&lastM&&m!==lastM){mCount++;if(mCount%p.rebalM===0){const tot=val(i);const off=ks.some(k=>Math.abs(sh[k]*C[k][i]/tot-W[k])>0.02);if(off)pend=true}}
+    lastM=m;
+  }
+  const li=n-1;
+  return {eq,log,taxPaid:taxPaid/fxUsd,feePaid:feePaid/fxUsd,p,fxUsd,realized:realized/fxUsd,
+    pending:pend?ks.map(k=>({kind:"고정",act:started?"비율 맞추기":"매수",asset:k,why:started?"비율 맞추기":"시작"})):[],
+    sleeves:ks.map(k=>({kind:"고정",cash:0,asset:sh[k]?k:null,shares:sh[k],entry:sh[k]?cost[k]/sh[k]/(1+0):0,cost:cost[k]/fxUsd,price:C[k][li],value:sh[k]*C[k][li]/fxUsd,stopped:false})).concat([{kind:"현금",cash:cash/fxUsd,asset:null,shares:0,entry:0,cost:0,price:null,value:cash/fxUsd,stopped:false}])};
+}
 function stats(eq,from,to){
   const e=eq.filter(x=>x[0]>=(from||"")&&x[0]<=(to||"9999"));if(e.length<10)return null;
   const mon={};for(const [d,v] of e)mon[d.slice(0,7)]=v;const mk=Object.keys(mon);const mr=[];
@@ -69,6 +99,8 @@ function stats(eq,from,to){
     ge1:mr.filter(x=>x>=0.01).length/mr.length*100,neg:mr.filter(x=>x<0).length/mr.length*100,worst:Math.min(...mr)*100,best:Math.max(...mr)*100,
     start:e[0][1],end:e[e.length-1][1],monthly:mk.slice(1).map((m,k)=>[m,mr[k]*100])};
 }
-const api={DEF,run,stats};
+// 전략 하나 실행: kind "fixed"면 고정 비율, 아니면 추세 회전
+function runAny(D,s){return s.kind==="fixed"?runFixed(D,s):run(D,s)}
+const api={DEF,run,runFixed,runAny,stats};
 if(typeof module!=="undefined")module.exports=api;else root.Engine=api;
 })(this);

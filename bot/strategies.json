@@ -1,0 +1,301 @@
+{
+ "설명": "가상계좌에서 동시에 돌리는 전략 10개. 각 1,000만원(가상). 규칙을 바꾸면 기록이 처음부터 다시 계산되므로 함부로 바꾸지 않는다.",
+ "from": "2026-10-24",
+ "strategies": [
+  {
+   "id": 1,
+   "name": "지금 전략",
+   "desc": "나스닥·에스앤피 중 오르는 쪽을 들고, 산 값보다 10% 떨어지면 손절",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": false,
+    "look": 39,
+    "trend": 40,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 4,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 2,
+   "name": "방어형",
+   "desc": "1번과 같되, 둘 다 내릴 때는 미국 장기국채나 금 중 오르는 쪽으로 피함",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": true,
+    "look": 39,
+    "trend": 40,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 4,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 3,
+   "name": "빠른 반응",
+   "desc": "최근 3개월 흐름과 20주 평균으로 판단, 2주마다 갈아타기 검토",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": false,
+    "look": 13,
+    "trend": 20,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 2,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 4,
+   "name": "느린 반응",
+   "desc": "최근 1년 흐름과 50주 평균으로 판단, 8주마다 갈아타기 검토",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": false,
+    "look": 52,
+    "trend": 50,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 8,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 5,
+   "name": "나스닥·금 반반",
+   "desc": "나스닥 추종 50% + 금 50%, 매달 비율이 2% 넘게 틀어지면 다시 맞춤 (1번의 10% 손절이 21년간 한 번도 안 걸려서 '손절 없음' 대신 넣음)",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "kind": "fixed",
+    "w": {
+     "QQQ": 0.5,
+     "GLD": 0.5
+    },
+    "rebalM": 1
+   }
+  },
+  {
+   "id": 6,
+   "name": "단타 섞기",
+   "desc": "70%는 1번 방식, 30%는 한 주에 4% 넘게 빠진 종목을 사서 2주 뒤 팖",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": false,
+    "look": 39,
+    "trend": 40,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 4,
+    "swingW": 30,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 7,
+   "name": "넓은 후보",
+   "desc": "나스닥·에스앤피·중소형주·선진국·신흥국 중 가장 강한 것, 모두 약하면 국채·금",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "QQQ",
+     "SPY",
+     "IWM",
+     "EFA",
+     "EEM"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": true,
+    "look": 39,
+    "trend": 40,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 4,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 8,
+   "name": "업종 순환",
+   "desc": "미국 8개 업종 중 가장 강한 업종, 모두 약하면 국채·금",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "risk": [
+     "XLK",
+     "XLF",
+     "XLE",
+     "XLV",
+     "XLY",
+     "XLP",
+     "XLI",
+     "XLU"
+    ],
+    "safe": [
+     "TLT",
+     "GLD"
+    ],
+    "useSafe": true,
+    "look": 39,
+    "trend": 40,
+    "stop": 10,
+    "reMa": 10,
+    "rebal": 4,
+    "swingW": 0,
+    "swingDrop": 4,
+    "swingHold": 2
+   }
+  },
+  {
+   "id": 9,
+   "name": "나눠 담기",
+   "desc": "에스앤피 60% + 미국 장기국채 40%, 매달 비율이 2% 넘게 틀어지면 다시 맞춤",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "kind": "fixed",
+    "w": {
+     "SPY": 0.6,
+     "TLT": 0.4
+    },
+    "rebalM": 1
+   }
+  },
+  {
+   "id": 10,
+   "name": "나스닥 그냥 보유",
+   "desc": "비교 기준: 처음에 나스닥 추종을 사서 계속 들고 있기",
+   "s": {
+    "fee": 0.25,
+    "sec": 0.00206,
+    "tax": 22,
+    "ded": 250,
+    "fx": 1350,
+    "start": 1000,
+    "whole": true,
+    "stopMode": "close",
+    "kind": "fixed",
+    "w": {
+     "QQQ": 1
+    },
+    "rebalM": 0
+   }
+  }
+ ]
+}

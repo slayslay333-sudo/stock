@@ -30,4 +30,26 @@ const s=E.stats(E.run(D,cfg.strategy).eq,'2016-01-01','2026-12-31');ok(s.avg>0.9
 const sp=path.join(__dirname,'..','paper','state.json');
 if(fs.existsSync(sp)){const st=JSON.parse(fs.readFileSync(sp,'utf8'));const rr=E.run(D,{...cfg.strategy,from:cfg.paper.from});
   ok(Math.abs((rr.eq.length?rr.eq.at(-1)[1]:cfg.strategy.start)-st.value)<0.01&&st.dataUntil===D.dates.at(-1),'가상계좌 저장값과 재계산 일치')}
+// 7. 전략 10개 가상계좌
+const SJ=JSON.parse(fs.readFileSync(path.join(__dirname,'strategies.json'),'utf8'));
+ok(SJ.strategies.length===10&&new Set(SJ.strategies.map(x=>x.id)).size===10,'전략 10개, 번호 겹침 없음');
+ok(SJ.strategies.every(x=>[...(x.s.risk||[]),...(x.s.safe||[]),...Object.keys(x.s.w||{})].every(k=>D.assets[k])),'전략이 쓰는 종목 자료가 모두 있음');
+ok(SJ.strategies.filter(x=>x.s.kind==='fixed').every(x=>Math.abs(Object.values(x.s.w).reduce((a,b)=>a+b,0)-1)<1e-9),'고정 비율 합이 100%');
+// 미래 자료를 보지 않는지 (고정 비율 5번, 업종 순환 8번)
+for(const id of [5,8]){const s={...SJ.strategies.find(x=>x.id===id).s,from:'2016-01-01'};const fl=E.runAny(D,s);let same=true;
+  for(let k=n-120;k<=n;k+=9){const Dk={dates:D.dates.slice(0,k),assets:Object.fromEntries(Object.entries(D.assets).map(([a,v])=>[a,v.slice(0,k)]))};
+    if(JSON.stringify(E.runAny(Dk,s).log)!==JSON.stringify(fl.log.filter(x=>x[0]<=Dk.dates.at(-1)))){same=false;break}}
+  ok(same,id+'번 전략 미래 자료 안 씀')}
+// 고정 비율 돈 계산 검산 (세금 0으로)
+{const s={...SJ.strategies.find(x=>x.id===5).s,from:'2016-01-01',tax:0};const r=E.runAny(D,s);const fee=s.fee/100,sec=s.sec/100;let cash=s.start*r.fxUsd;const sh={};
+ for(const x of r.log){if(x[2]==='매수'){cash-=x[6]*x[4]*(1+fee);sh[x[3]]=(sh[x[3]]||0)+x[6]}else{cash+=x[6]*x[4]*(1-fee-sec);sh[x[3]]-=x[6]}}
+ const v=(cash+Object.entries(sh).reduce((a,[k,q])=>a+q*D.assets[k].at(-1)[2],0))/r.fxUsd;ok(Math.abs(v-r.eq.at(-1)[1])<0.01,'고정 비율 현금 흐름 검산 '+v.toFixed(2)+' = 엔진 '+r.eq.at(-1)[1].toFixed(2)+'만원');
+ ok(Object.values(sh).every(q=>q>=0)&&r.log.every(x=>Number.isInteger(x[6])&&x[6]>0),'고정 비율: 1주 단위, 보유 수량 마이너스 없음')}
+{let neg=false;for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:'2005-01-01'});if(r.sleeves.some(z=>z.cash<-1e-6)||r.eq.some(e=>!(e[1]>0)))neg=true}ok(!neg,'10개 전략 모두 현금 마이너스·0원 이하 없음 (2005년부터)')}
+const mp=path.join(__dirname,'..','paper','multi.json');
+if(fs.existsSync(mp)){const m=JSON.parse(fs.readFileSync(mp,'utf8'));let good=m.dataUntil===D.dates.at(-1)&&m.strategies.length===10;
+  for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:SJ.from});const v=r.eq.length?r.eq.at(-1)[1]:x.s.start;const st=m.strategies.find(z=>z.id===x.id);if(!st||Math.abs(st.value-v)>0.01)good=false}
+  ok(good,'전략 10개 가상계좌 저장값과 재계산 일치')}
+const ap=path.join(__dirname,'..','paper','analysis.json');
+if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUntil===D.dates.at(-1)&&a.rows.length===10,'분석 자료가 최신 자료 기준')}
 console.log(fail?'\n문제 '+fail+'개':'\n전부 통과');process.exit(fail?1:0);

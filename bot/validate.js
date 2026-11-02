@@ -1,5 +1,5 @@
 // 실수 방지 점검: 문제가 하나라도 있으면 실패(종료 코드 1)
-const fs=require('fs'),path=require('path'),E=require('./engine.js');
+const fs=require('fs'),path=require('path'),E=require('./engine.js'),NEWS=require('./news.js');
 const cfg=JSON.parse(fs.readFileSync(path.join(__dirname,'config.json'),'utf8'));
 const D=JSON.parse(fs.readFileSync(path.join(__dirname,'data','weekly.json'),'utf8'));
 let fail=0;const ok=(c,m)=>{console.log((c?'통과':'실패')+' · '+m);if(!c)fail++};
@@ -32,7 +32,8 @@ if(fs.existsSync(sp)){const st=JSON.parse(fs.readFileSync(sp,'utf8'));const rr=E
   ok(Math.abs((rr.eq.length?rr.eq.at(-1)[1]:cfg.strategy.start)-st.value)<0.01&&st.dataUntil===D.dates.at(-1),'가상계좌 저장값과 재계산 일치')}
 // 7. 전략 10개 가상계좌
 const SJ=JSON.parse(fs.readFileSync(path.join(__dirname,'strategies.json'),'utf8'));
-ok(SJ.strategies.length===10&&new Set(SJ.strategies.map(x=>x.id)).size===10,'전략 10개, 번호 겹침 없음');
+ok(SJ.strategies.length>=10&&new Set(SJ.strategies.map(x=>x.id)).size===SJ.strategies.length,'전략 '+SJ.strategies.length+'개, 번호 겹침 없음');
+{const e=NEWS.check(D.dates);ok(!e.length,'뉴스 점수 기록 '+NEWS.load().weeks.length+'주 형식'+(e.length?': '+e.join(', '):''))}
 ok(SJ.strategies.every(x=>[...(x.s.risk||[]),...(x.s.safe||[]),...Object.keys(x.s.w||{})].every(k=>D.assets[k])),'전략이 쓰는 종목 자료가 모두 있음');
 ok(SJ.strategies.filter(x=>x.s.kind==='fixed').every(x=>Math.abs(Object.values(x.s.w).reduce((a,b)=>a+b,0)-1)<1e-9),'고정 비율 합이 100%');
 // 미래 자료를 보지 않는지 (고정 비율 5번, 업종 순환 8번)
@@ -45,11 +46,11 @@ for(const id of [5,8]){const s={...SJ.strategies.find(x=>x.id===id).s,from:'2016
  for(const x of r.log){if(x[2]==='매수'){cash-=x[6]*x[4]*(1+fee);sh[x[3]]=(sh[x[3]]||0)+x[6]}else{cash+=x[6]*x[4]*(1-fee-sec);sh[x[3]]-=x[6]}}
  const v=(cash+Object.entries(sh).reduce((a,[k,q])=>a+q*D.assets[k].at(-1)[2],0))/r.fxUsd;ok(Math.abs(v-r.eq.at(-1)[1])<0.01,'고정 비율 현금 흐름 검산 '+v.toFixed(2)+' = 엔진 '+r.eq.at(-1)[1].toFixed(2)+'만원');
  ok(Object.values(sh).every(q=>q>=0)&&r.log.every(x=>Number.isInteger(x[6])&&x[6]>0),'고정 비율: 1주 단위, 보유 수량 마이너스 없음')}
-{let neg=false;for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:'2005-01-01'});if(r.sleeves.some(z=>z.cash<-1e-6)||r.eq.some(e=>!(e[1]>0)))neg=true}ok(!neg,'10개 전략 모두 현금 마이너스·0원 이하 없음 (2005년부터)')}
+{let neg=false;for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:'2005-01-01'});if(r.sleeves.some(z=>z.cash<-1e-6)||r.eq.some(e=>!(e[1]>0)))neg=true}ok(!neg,'전략 모두 현금 마이너스·0원 이하 없음 (2005년부터)')}
 const mp=path.join(__dirname,'..','paper','multi.json');
-if(fs.existsSync(mp)){const m=JSON.parse(fs.readFileSync(mp,'utf8'));let good=m.dataUntil===D.dates.at(-1)&&m.strategies.length===10;
-  for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:SJ.from});const v=r.eq.length?r.eq.at(-1)[1]:x.s.start;const st=m.strategies.find(z=>z.id===x.id);if(!st||Math.abs(st.value-v)>0.01)good=false}
-  ok(good,'전략 10개 가상계좌 저장값과 재계산 일치')}
+if(fs.existsSync(mp)){const m=JSON.parse(fs.readFileSync(mp,'utf8'));let good=m.dataUntil===D.dates.at(-1)&&m.strategies.length===SJ.strategies.length;
+  for(const x of SJ.strategies){const r=E.runAny(D,{...NEWS.attach(x.s),from:SJ.from});const v=r.eq.length?r.eq.at(-1)[1]:x.s.start;const st=m.strategies.find(z=>z.id===x.id);if(!st||Math.abs(st.value-v)>0.01)good=false}
+  ok(good,'전략 '+SJ.strategies.length+'개 가상계좌 저장값과 재계산 일치')}
 const ap=path.join(__dirname,'..','paper','analysis.json');
-if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUntil===D.dates.at(-1)&&a.rows.length===10,'분석 자료가 최신 자료 기준')}
+if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUntil===D.dates.at(-1)&&a.rows.length===SJ.strategies.length,'분석 자료가 최신 자료 기준')}
 console.log(fail?'\n문제 '+fail+'개':'\n전부 통과');process.exit(fail?1:0);

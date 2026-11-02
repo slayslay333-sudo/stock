@@ -1,7 +1,7 @@
 // 전략 10개 분석: 과거 구간별 성적, 해마다 성적, 아무 달에 시작했을 때 1년 결과, 설정을 조금 바꿔도 버티는지,
 // 무작위로 고른 것보다 나은지(운 판별), 큰 하락장 때 성적, 전략끼리 얼마나 비슷하게 움직이는지.
 // 사용: node analyze.js  → ../paper/analysis.json
-const fs=require('fs'),path=require('path'),E=require('./engine.js');
+const fs=require('fs'),path=require('path'),E=require('./engine.js'),NEWS=require('./news.js');
 const D=JSON.parse(fs.readFileSync(path.join(__dirname,'data','weekly.json'),'utf8'));
 const SL=JSON.parse(fs.readFileSync(path.join(__dirname,'strategies.json'),'utf8')).strategies;
 const T=D.dates;
@@ -25,7 +25,7 @@ function corr(a,b){const n=a.length;const ma=a.reduce((s,x)=>s+x,0)/n,mb=b.reduc
 
 const CRASH=[["2008 금융위기","2007-10-12","2009-03-06"],["2020 코로나 폭락","2020-02-14","2020-03-20"],["2022 금리 인상 하락장","2021-12-31","2022-12-30"],["2025 관세 충격","2025-02-14","2025-04-11"]];
 const rows=[];const weeklyRet={};
-for(const x of SL){const s=x.s;
+for(const x of SL){const s=NEWS.attach(x.s);
   const full=E.runAny(D,{...s,from:F});const st=E.stats(full.eq);
   const is=E.stats(E.runAny(D,{...s,from:F,to:IS_TO}).eq),oos=E.stats(E.runAny(D,{...s,from:OOS}).eq);
   const yr=yearly(full.eq);const roll=rolling(full.eq,52).map(r=>r[1]);
@@ -40,7 +40,7 @@ for(const x of SL){const s=x.s;
   // 운 판별 (세금 빼고 비교)
   let luck=null;
   if(s.kind!=="fixed"){const mine=E.stats(E.run(D,{...s,from:F,tax:0}).eq).cagr;const rc=randomCagr(s,400);luck={mine,randMedian:pct(rc,.5),rand90:pct(rc,.9),beat:rc.filter(v=>v<mine).length/rc.length*100}}
-  rows.push({id:x.id,name:x.name,desc:x.desc,
+  rows.push({id:x.id,name:x.name,desc:x.desc,noBacktest:!!s.useNews,
     full:{avg:st.avg,cagr:st.cagr,mdd:st.mdd,neg:st.neg,worst:st.worst,end:full.eq.at(-1)[1],tax:full.taxPaid,fee:full.feePaid,tradesPerYear:trades},
     is:{avg:is.avg,cagr:is.cagr,mdd:is.mdd},oos:{avg:oos.avg,cagr:oos.cagr,mdd:oos.mdd,ge1:oos.ge1,neg:oos.neg},
     years:yr,yearsUp:yr.filter(y=>y[1]>0).length,yearsN:yr.length,
@@ -50,7 +50,8 @@ for(const x of SL){const s=x.s;
   console.log(x.id+'. '+x.name.padEnd(8),'전체 월평균',st.avg.toFixed(2)+'%','연',st.cagr.toFixed(1)+'%','최대하락',st.mdd.toFixed(0)+'%','| 검증기간 월평균',oos.avg.toFixed(2)+'%','| 1년 목표 달성',(rows.at(-1).roll.hitTarget).toFixed(0)+'%','손해',(rows.at(-1).roll.loss).toFixed(0)+'%',luck?('| 무작위보다 나은 비율 '+luck.beat.toFixed(0)+'%'):'',nb?('| 설정 주변 중앙 '+nb.median.toFixed(2)+'%'):'');
 }
 const ids=SL.map(x=>x.id);const cm=ids.map(a=>ids.map(b=>+corr(weeklyRet[a],weeklyRet[b]).toFixed(2)));
-const out={made:new Date().toISOString(),dataUntil:T.at(-1),periods:{full:F,isTo:IS_TO,oos:OOS},target:TARGET*100,crashes:CRASH,rows,corr:{ids,m:cm}};
+const newsWeeks=NEWS.load().weeks.length;
+const out={newsWeeks,made:new Date().toISOString(),dataUntil:T.at(-1),periods:{full:F,isTo:IS_TO,oos:OOS},target:TARGET*100,crashes:CRASH,rows,corr:{ids,m:cm}};
 fs.mkdirSync(path.join(__dirname,'..','paper'),{recursive:true});
 fs.writeFileSync(path.join(__dirname,'..','paper','analysis.json'),JSON.stringify(out));
 console.log('저장: paper/analysis.json');

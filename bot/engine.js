@@ -40,7 +40,11 @@ function run(D,p){p=Object.assign({},DEF,p);
     const stopNow=s=>pend.some(x=>x[0]===s&&x[2]===null&&x[3].startsWith("손절"));
     const reOk=k=>{if(!core.stopped)return true;const m=sma(C[k],i,p.reMa);return m!==null&&C[k][i]>m};
     const rebalWeek=(eq.length%p.rebal)===0;
-    if(core.w>0){
+    // 뉴스 거름망(11번): 이번 주 점수 -2, 또는 -1 이하가 2주 연속이면 현금으로 피하고 새로 사지 않음
+    const ns=d=>p.news&&p.news[d]!=null?p.news[d]:null;
+    const newsBad=!!p.news&&(ns(T[i])!==null&&(ns(T[i])<=-2||(ns(T[i])<=-1&&i>0&&ns(T[i-1])!==null&&ns(T[i-1])<=-1)));
+    if(newsBad){for(const s of sl)if(s.w>0&&s.sh&&!stopNow(s))pend.push([s,"sell",null,"뉴스 악재"])}
+    else if(core.w>0){
       if(core.sh&&!stopNow(core)){const a=core.a,isRisk=p.risk.includes(a);
         if(isRisk&&!up(a))pend.push([core,"sell",null,"추세 꺾임"]);
         else if(rebalWeek&&target&&target!==a)pend.push([core,"sell",null,"갈아타기"]);}
@@ -48,7 +52,7 @@ function run(D,p){p=Object.assign({},DEF,p);
         if(reOk(target)){pend.push([core,"buy",target,cand[0]?"추세 상승":"방어 자산"]);core.stopped=false}}
     }
     const sw=sl[1];
-    if(sw.w>0){
+    if(sw.w>0&&!newsBad){
       if(sw.sh&&!stopNow(sw)){if(sw.wk>=p.swingHold)pend.push([sw,"sell",null,"단타 정리"])}
       else{const c=p.risk.filter(k=>up(k)&&i>0&&C[k][i]/C[k][i-1]-1<=-p.swingDrop/100);if(c.length)pend.push([sw,"buy",c[0],"급락 반등 노림"])}
     }

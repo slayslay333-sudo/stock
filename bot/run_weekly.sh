@@ -16,7 +16,7 @@ node validate.js > "$LOG/last_validate.txt" || { cat "$LOG/last_validate.txt"; f
 node test_kis.js > "$LOG/last_test_kis.txt" || { cat "$LOG/last_test_kis.txt"; fail "한투 연결 시험"; }
 echo "점검 전부 통과"
 if [ -z "${NO_GIT:-}" ]; then
-  CH=$(git -C .. status --porcelain | awk '{print $2}' | grep -v -E '^(bot/data/weekly.json|paper/state.json|paper/multi.json|paper/analysis.json|bot/logs/|bot/raw/)' || true)
+  CH=$(git -C .. status --porcelain | awk '{print $2}' | grep -v -E '^(bot/data/weekly.json|paper/state.json|paper/multi.json|paper/analysis.json|bot/data/news.json|bot/logs/|bot/raw/)' || true)
   if [ -n "$CH" ]; then fail "예상 밖 파일 변경: $CH"; fi
   git -C .. add bot/data/weekly.json paper/state.json paper/multi.json paper/analysis.json
   git -C .. -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -q -m "가상계좌 주간 실행 (맥미니) $(date +%F)" && (git -C .. push -q origin main || echo "(사이트 올리기 실패 — 다음 주에 같이 올라감)")

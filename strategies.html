@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전략 10개 비교</title>
+<title>전략 비교</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Roboto:wght@400;500;700&family=Barlow+Condensed:wght@500;600&display=swap">
 <style>
 /* 티타늄 계기판 톤(장부와 같은 색). 위: 목표 대비 결과 계기판 → 규칙 조절판 → 그래프 → 월별 성적 → 거래 기록 */
@@ -62,14 +62,18 @@ nav.top{display:flex;gap:14px;font-size:13px}nav.top a{color:var(--muted);text-d
 </style>
 </head><body>
 <div class="wrap">
- <nav class="top"><a href="./">주식 장부</a><a href="lab.html">전략 시험실</a><a href="paper.html">가상계좌</a><a class="on" href="strategies.html">전략 10개</a></nav>
- <header><div class="eyebrow">가상계좌 10개 동시 운용 · 각 1,000만원 · 매주 자동</div><h1>전략 10개 비교</h1><div class="small muted" id="sub">불러오는 중…</div></header>
+ <nav class="top"><a href="./">주식 장부</a><a href="lab.html">전략 시험실</a><a href="paper.html">가상계좌</a><a class="on" href="strategies.html">전략 비교</a></nav>
+ <header><div class="eyebrow">가상계좌 여러 개 동시 운용 · 각 1,000만원 · 매주 자동</div><h1>전략 비교</h1><div class="small muted" id="sub">불러오는 중…</div></header>
 
  <section class="card"><h2>지금 순위 (실제 시세로 가상 운용)</h2>
   <div class="scroll"><table class="rank" id="rank"></table></div>
   <div class="help">줄을 누르면 전략 설명·가진 종목·다음 주 주문·거래 기록이 보입니다. 시작한 지 얼마 안 돼서 지금 순위는 거의 운입니다. 아래 과거 분석과 함께 보세요.</div></section>
 
  <section class="card"><h2>분석 결론 <span class="small muted" id="adate"></span></h2><div class="find" id="find"></div></section>
+
+ <section class="card"><h2>뉴스 점수 기록 (11번 전략)</h2>
+  <div class="help">매주 토요일 지난주 미국 시장 뉴스를 보고 정해진 기준표대로 -2~+2 점수를 매깁니다. -2이거나 -1 이하가 2주 연속이면 11번은 다음 주 현금으로 피합니다. 한 번 적은 점수는 고치지 않습니다.</div>
+  <div id="news"></div><details class="help"><summary>점수 기준표</summary><div id="rubric"></div></details></section>
 
  <section class="card"><h2>과거 21년 성적 (2005년 1월부터, 수수료·세금 뺀 뒤)</h2>
   <div class="scroll"><table class="tbl" id="past"></table></div>
@@ -93,10 +97,10 @@ nav.top{display:flex;gap:14px;font-size:13px}nav.top a{color:var(--muted);text-d
 (async function(){
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const pc=(v,d=2)=>v==null?"-":(Math.abs(v)<Math.pow(10,-d)/2?(0).toFixed(d):(v>0?"+":"")+v.toFixed(d))+"%",cl=v=>v>0.004?"up":v<-0.004?"down":"",man=v=>Math.round(v).toLocaleString("ko-KR")+"만원";
-let M,A;
-try{[M,A]=await Promise.all(["paper/multi.json","paper/analysis.json"].map(u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})))}
+let M,A,NW;
+try{[M,A,NW]=await Promise.all(["paper/multi.json","paper/analysis.json","bot/data/news.json"].map(u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})))}
 catch(e){$("#sub").textContent="자료를 불러오지 못했습니다. 잠시 뒤 새로 고침해 주세요.";return}
-const S=Object.fromEntries(M.strategies.map(s=>[s.id,s])),R=Object.fromEntries(A.rows.map(r=>[r.id,r]));
+const S=Object.fromEntries(M.strategies.map(s=>[s.id,s])),R=Object.fromEntries(A.rows.map(r=>[r.id,r]));const BR=A.rows.filter(x=>!x.noBacktest);
 $("#sub").textContent=M.from+" 다음 주부터 시작 · 마지막 자료 "+M.dataUntil+" 주 · 갱신 "+new Date(M.updated).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"});
 // 순위
 const started=M.strategies.some(s=>s.log.length);
@@ -117,19 +121,23 @@ const r=R,F=[
  ["4번 느린 반응은 뒤 10년이 좋지만 앞 10년은 약했습니다.","뒤 10년 월평균 "+r[4].oos.avg.toFixed(2)+"%, 앞 10년 "+r[4].is.avg.toFixed(2)+"%. 설정을 바꿔도 잘 버텼습니다("+r[4].nb.share08.toFixed(0)+"%). 시기를 타는 전략일 수 있어 지켜볼 후보입니다."],
  ["1년 단위로 보면 어느 전략이든 손해 보는 해가 꽤 있습니다.","아무 달에 시작해 1년 들고 있었을 때 손해였던 비율: 1번 "+r[1].roll.loss.toFixed(0)+"%, 5번 "+r[5].roll.loss.toFixed(0)+"%, 10번 "+r[10].roll.loss.toFixed(0)+"%. 실제 돈은 최소 6개월~1년 가상 운용을 보고 넣는 게 맞습니다."]];
 $("#find").innerHTML=F.map((f,i)=>'<div class="f"><b class="k">'+(i+1)+'</b><div><b>'+f[0]+'</b><div class="small muted">'+f[1]+'</div></div></div>').join("");
+// 뉴스
+const sc=v=>'<b class="'+(v<0?"down":v>0?"up":"")+'">'+(v>0?"+":"")+v+'</b>';
+$("#news").innerHTML=NW.weeks.length?'<div class="scroll"><table class="tbl"><tr><th>주</th><th>점수</th><th style="text-align:left">이유</th></tr>'+NW.weeks.slice().reverse().map(w=>'<tr><td class="n">'+w.week+'</td><td>'+sc(w.score)+'</td><td style="text-align:left;white-space:normal;min-width:260px">'+esc(w.summary)+'<div class="small">'+(w.sources||[]).map(x=>'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a>').join(" · ")+'</div></td></tr>').join("")+'</table></div>':'<div class="muted small">아직 기록 없음</div>';
+$("#rubric").innerHTML=Object.entries(NW.기준||{}).sort((a,b)=>a[0]-b[0]).map(([k,v])=>'<p>'+sc(+k)+' '+esc(v)+'</p>').join("");
 // 과거 표
-const ord=A.rows.slice().sort((a,b)=>b.full.avg-a.full.avg);
-$("#past").innerHTML='<tr><th>전략</th><th>월평균</th><th>연평균</th><th>최대 하락</th><th>뒤 10년</th><th>1년 목표</th><th>1년 손해</th><th>무작위 대비</th><th>설정 바꿔도</th><th>세금 낸 돈</th></tr>'+ord.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td><td class="n '+cl(x.full.avg)+'">'+pc(x.full.avg)+'</td><td class="n">'+pc(x.full.cagr,1)+'</td><td class="n down">'+x.full.mdd.toFixed(0)+'%</td><td class="n '+(x.oos.avg>=1?"good":"")+'">'+pc(x.oos.avg)+'</td><td class="n">'+x.roll.hitTarget.toFixed(0)+'%</td><td class="n">'+x.roll.loss.toFixed(0)+'%</td><td class="n '+(x.luck?(x.luck.beat>=90?"good":x.luck.beat<50?"bad":""):"")+'">'+(x.luck?x.luck.beat.toFixed(0)+"%":"-")+'</td><td class="n '+(x.nb?(x.nb.share08>=80?"good":x.nb.share08<30?"bad":""):"")+'">'+(x.nb?x.nb.share08.toFixed(0)+"%":"-")+'</td><td class="n">'+man(x.full.tax)+'</td></tr>').join("");
-$("#crash").innerHTML='<tr><th>전략</th>'+A.crashes.map(c=>'<th>'+c[0]+'<div class="small">'+c[1].slice(2)+'~'+c[2].slice(2)+'</div></th>').join("")+'</tr>'+A.rows.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td>'+x.crash.map(c=>'<td class="n '+cl(c[1])+'">'+pc(c[1],0)+'</td>').join("")+'</tr>').join("");
+const ord=BR.slice().sort((a,b)=>b.full.avg-a.full.avg);
+$("#past").innerHTML='<tr><th>전략</th><th>월평균</th><th>연평균</th><th>최대 하락</th><th>뒤 10년</th><th>1년 목표</th><th>1년 손해</th><th>무작위 대비</th><th>설정 바꿔도</th><th>세금 낸 돈</th></tr>'+ord.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td><td class="n '+cl(x.full.avg)+'">'+pc(x.full.avg)+'</td><td class="n">'+pc(x.full.cagr,1)+'</td><td class="n down">'+x.full.mdd.toFixed(0)+'%</td><td class="n '+(x.oos.avg>=1?"good":"")+'">'+pc(x.oos.avg)+'</td><td class="n">'+x.roll.hitTarget.toFixed(0)+'%</td><td class="n">'+x.roll.loss.toFixed(0)+'%</td><td class="n '+(x.luck?(x.luck.beat>=90?"good":x.luck.beat<50?"bad":""):"")+'">'+(x.luck?x.luck.beat.toFixed(0)+"%":"-")+'</td><td class="n '+(x.nb?(x.nb.share08>=80?"good":x.nb.share08<30?"bad":""):"")+'">'+(x.nb?x.nb.share08.toFixed(0)+"%":"-")+'</td><td class="n">'+man(x.full.tax)+'</td></tr>').join("")+A.rows.filter(x=>x.noBacktest).map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td><td colspan="9" class="muted" style="text-align:left">과거 뉴스 점수가 없어 과거 시험을 할 수 없음 (앞으로 쌓이는 기록으로만 평가)</td></tr>').join("");
+$("#crash").innerHTML='<tr><th>전략</th>'+A.crashes.map(c=>'<th>'+c[0]+'<div class="small">'+c[1].slice(2)+'~'+c[2].slice(2)+'</div></th>').join("")+'</tr>'+BR.map(x=>'<tr><td><span class="no">'+x.id+'</span> '+esc(x.name)+'</td>'+x.crash.map(c=>'<td class="n '+cl(c[1])+'">'+pc(c[1],0)+'</td>').join("")+'</tr>').join("");
 // 해마다
-const yrs=A.rows[0].years.map(y=>y[0]);const wash=v=>{const a=Math.min(1,Math.abs(v)/30);return v>=0?"background:color-mix(in srgb,var(--up) "+(a*55+6)+"%,transparent)":"background:color-mix(in srgb,var(--down) "+(a*55+6)+"%,transparent)"};
+const yrs=BR[0].years.map(y=>y[0]);const wash=v=>{const a=Math.min(1,Math.abs(v)/30);return v>=0?"background:color-mix(in srgb,var(--up) "+(a*55+6)+"%,transparent)":"background:color-mix(in srgb,var(--down) "+(a*55+6)+"%,transparent)"};
 const yg=$("#years");yg.style.gridTemplateColumns="96px repeat("+yrs.length+",minmax(34px,1fr))";yg.style.minWidth=(96+yrs.length*36)+"px";
-yg.innerHTML='<div class="h"></div>'+yrs.map(y=>'<div class="h" style="text-align:center">'+y.slice(2)+'</div>').join("")+A.rows.map(x=>'<div class="h">'+x.id+'. '+esc(x.name)+'</div>'+x.years.map(y=>'<div style="'+wash(y[1])+'" title="'+y[0]+' '+y[1].toFixed(1)+'%">'+Math.round(y[1])+'</div>').join("")).join("");
+yg.innerHTML='<div class="h"></div>'+yrs.map(y=>'<div class="h" style="text-align:center">'+y.slice(2)+'</div>').join("")+BR.map(x=>'<div class="h">'+x.id+'. '+esc(x.name)+'</div>'+x.years.map(y=>'<div style="'+wash(y[1])+'" title="'+y[0]+' '+y[1].toFixed(1)+'%">'+Math.round(y[1])+'</div>').join("")).join("");
 // 그래프
-const COL=["#B48D55","#3A78F2","#8E6CEF","#1E9E7A","#EE4452","#E08A1E","#5B6B7F","#C2559A","#2BA3B8","#15181D"];
+const COL=["#B48D55","#3A78F2","#8E6CEF","#1E9E7A","#EE4452","#E08A1E","#5B6B7F","#C2559A","#2BA3B8","#15181D","#7A9A2E","#A0522D","#6A5ACD","#D2691E"];
 const on=new Set([1,5,9,10]);
-$("#pick").innerHTML=A.rows.map((x,i)=>'<label><input type="checkbox" value="'+x.id+'" '+(on.has(x.id)?"checked":"")+'><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+COL[i]+'"></i>'+x.id+'. '+esc(x.name)+'</label>').join("");
-function draw(){const W=720,H=260,pl=54,pr=10,pt=10,pb=24;const rs=A.rows.filter(x=>on.has(x.id));if(!rs.length){$("#chart").innerHTML="";return}
+$("#pick").innerHTML=BR.map((x,i)=>'<label><input type="checkbox" value="'+x.id+'" '+(on.has(x.id)?"checked":"")+'><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+COL[i]+'"></i>'+x.id+'. '+esc(x.name)+'</label>').join("");
+function draw(){const W=720,H=260,pl=54,pr=10,pt=10,pb=24;const rs=BR.filter(x=>on.has(x.id));if(!rs.length){$("#chart").innerHTML="";return}
  const all=rs.flatMap(x=>x.eq.map(e=>Math.log(e[1])));const lo=Math.min(...all),hi=Math.max(...all);const N=rs[0].eq.length;
  const X=i=>pl+(W-pl-pr)*i/(N-1),Y=v=>pt+(H-pt-pb)*(1-(Math.log(v)-lo)/((hi-lo)||1));
  let g="";[500,1000,2000,5000,10000,20000].filter(v=>Math.log(v)>=lo-0.05&&Math.log(v)<=hi+0.05).forEach(v=>{g+='<line class="grid" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text class="lab" x="'+(pl-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+v.toLocaleString("ko-KR")+'만</text>'});
@@ -138,7 +146,7 @@ function draw(){const W=720,H=260,pl=54,pr=10,pt=10,pb=24;const rs=A.rows.filter
  $("#chart").innerHTML='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="전략별 계좌 금액 흐름">'+g+'</svg>'}
 $("#pick").onchange=e=>{const v=+e.target.value;e.target.checked?on.add(v):on.delete(v);draw()};draw();
 // 닮은 정도
-const cg=$("#corr"),ids=A.corr.ids;cg.style.gridTemplateColumns="96px repeat("+ids.length+",minmax(34px,1fr))";cg.style.minWidth=(96+ids.length*36)+"px";
-cg.innerHTML='<div class="h"></div>'+ids.map(i=>'<div class="h" style="text-align:center">'+i+'</div>').join("")+ids.map((a,ai)=>'<div class="h">'+a+'. '+esc(R[a].name)+'</div>'+A.corr.m[ai].map(v=>'<div style="background:color-mix(in srgb,var(--gold) '+Math.round(Math.max(0,v)*70)+'%,transparent)">'+v.toFixed(2)+'</div>').join("")).join("");
+const cg=$("#corr"),ci=A.corr.ids.map((v,i)=>[v,i]).filter(([v])=>!R[v].noBacktest),ids=ci.map(c=>c[0]);cg.style.gridTemplateColumns="96px repeat("+ids.length+",minmax(34px,1fr))";cg.style.minWidth=(96+ids.length*36)+"px";
+cg.innerHTML='<div class="h"></div>'+ids.map(i=>'<div class="h" style="text-align:center">'+i+'</div>').join("")+ids.map((a,ai)=>'<div class="h">'+a+'. '+esc(R[a].name)+'</div>'+ci.map(([,j])=>A.corr.m[ci[ai][1]][j]).map(v=>'<div style="background:color-mix(in srgb,var(--gold) '+Math.round(Math.max(0,v)*70)+'%,transparent)">'+v.toFixed(2)+'</div>').join("")).join("");
 })();
 </script></body></html>

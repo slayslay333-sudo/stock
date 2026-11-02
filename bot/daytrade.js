@@ -3,13 +3,13 @@
 // 사용: node daytrade.js <현재가 파일>   (알파 밴티지 GLOBAL_QUOTE 결과: CSV 또는 {"result":"CSV"})
 //       node daytrade.js --check          (기록 점검만)
 // 규칙 (미국 동부 시간 기준, 정규장 9:30~16:00)
-//   사기: 보유 없음 + 10:30~15:30 사이 + 오늘 시가보다 0.3% 넘게 높고 + 어제 종가보다 높을 때 → 가진 돈 전부로 1주 단위 매수
-//   팔기: 산 값보다 1% 떨어지면(손절) / 2% 오르면(익절) / 15:30 이후 또는 장이 끝난 뒤 처음 실행될 때(당일 정리)
+//   사기: 보유 없음 + 10:30~15:00 사이 + 오늘 시가보다 0.3% 넘게 높고 + 어제 종가보다 높을 때 → 가진 돈 전부로 1주 단위 매수
+//   팔기: 산 값보다 1% 떨어지면(손절) / 2% 오르면(익절) / 15:00 이후 또는 장이 끝난 뒤 처음 실행될 때(당일 정리)
 //   하루에 한 번만 산다. 수수료 0.25%(사고팔 때 각각) + 팔 때 미국 거래위원회 수수료, 체결가는 현재가에서 0.05% 불리하게.
 //   양도세는 해가 바뀔 때 1년 이익에서 250만원 빼고 22%.
 const fs=require('fs'),path=require('path');
 const FILE=path.join(__dirname,'data','daytrade.json');
-const R={sym:'QQQ',start:1000,fx:1350,fee:0.25,sec:0.00206,slip:0.05,tax:22,ded:250,upOpen:0.3,stop:1,take:2,entryFrom:'10:30',entryTo:'15:30',exitAt:'15:30'};
+const R={sym:'QQQ',start:1000,fx:1350,fee:0.25,sec:0.00206,slip:0.05,tax:22,ded:250,upOpen:0.3,stop:1,take:2,entryFrom:'10:30',entryTo:'15:00',exitAt:'15:00'};
 function load(){try{return JSON.parse(fs.readFileSync(FILE,'utf8'))}catch(e){const fxUsd=1e4/R.fx;return {rules:R,cashUsd:R.start*fxUsd,shares:0,entry:null,entryDay:null,costUsd:0,boughtDays:[],realizedUsdYear:0,year:null,taxMan:0,feeMan:0,log:[],marks:[],quotes:[]}}}
 function et(now){const f=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,weekday:'short'});
   const p=Object.fromEntries(f.formatToParts(now).map(x=>[x.type,x.value]));return {day:p.year+'-'+p.month+'-'+p.day,hm:(p.hour==='24'?'00':p.hour)+':'+p.minute,wd:p.weekday}}

@@ -69,6 +69,15 @@ nav.top{display:flex;gap:14px;font-size:13px}nav.top a{color:var(--muted);text-d
   <div class="scroll"><table class="rank" id="rank"></table></div>
   <div class="help">줄을 누르면 전략 설명·가진 종목·다음 주 주문·거래 기록이 보입니다. 시작한 지 얼마 안 돼서 지금 순위는 거의 운입니다. 아래 과거 분석과 함께 보세요.</div></section>
 
+ <section class="card"><h2>현황 <span class="small muted" id="stTime"></span></h2><div id="status" class="small"></div>
+  <div class="help">30분마다 세 가지 일을 돌아가며 합니다: ① 단타 모의투자(미국 장 시간에만 거래) ② 새 아이디어 시험·실수 점검 ③ 현황 정리(이 칸).</div></section>
+
+ <section class="card"><h2>① 단타 모의투자 (실험 · 나스닥 추종 하나)</h2><div id="dt" class="small"></div>
+  <details class="help"><summary>규칙</summary><p>미국 동부 시간 10:30~15:30 사이, 나스닥 추종 현재가가 그날 시가보다 0.3% 넘게 높고 어제 종가보다 높으면 가진 돈 전부로 삽니다(하루 한 번). 산 값보다 1% 떨어지면 손절, 2% 오르면 익절, 15:30 이후에는 무조건 팔아서 밤을 넘기지 않습니다. 수수료 0.25%(사고팔 때 각각)와 체결가 0.05% 불리함을 반영합니다. 무료 자료로는 30분 단위 과거 시세를 받을 수 없어(유료 전용) 과거 시험을 못 했고, 실행 간격(약 1시간 30분)마다의 현재가로만 판단합니다.</p></details></section>
+
+ <section class="card"><h2>② 연구 기록 (새 아이디어 시험)</h2><div id="rs"></div>
+  <div class="help">기준은 1번 지금 전략입니다. 좋게 나와도 가상계좌 규칙은 자동으로 바꾸지 않고, 사장님 확인 뒤에만 추가합니다. 시험한 개수가 많을수록 운 좋게 잘 나온 것이 섞일 가능성이 커집니다. "근사"는 여러 전략의 주간 수익률을 섞어 계산한 대략치입니다.</div></section>
+
  <section class="card"><h2>분석 결론 <span class="small muted" id="adate"></span></h2><div class="find" id="find"></div></section>
 
  <section class="card"><h2>뉴스 점수 기록 (11번 전략)</h2>
@@ -100,6 +109,23 @@ const pc=(v,d=2)=>v==null?"-":(Math.abs(v)<Math.pow(10,-d)/2?(0).toFixed(d):(v>0
 let M,A,NW;
 try{[M,A,NW]=await Promise.all(["paper/multi.json","paper/analysis.json","bot/data/news.json"].map(u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})))}
 catch(e){$("#sub").textContent="자료를 불러오지 못했습니다. 잠시 뒤 새로 고침해 주세요.";return}
+const opt=u=>fetch(u,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+const [STS,DT,RS]=await Promise.all(["paper/status.json","bot/data/daytrade.json","paper/research.json"].map(opt));
+const kst=t=>t?new Date(t).toLocaleString("ko-KR",{timeZone:"Asia/Seoul",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"-";
+if(STS){$("#stTime").textContent="· "+kst(STS.updated)+" 갱신";
+ $("#status").innerHTML=(STS.issues.length?'<div class="note">'+STS.issues.map(esc).join("<br>")+'</div>':'<div class="good" style="color:var(--up)">이상 없음</div>')+
+ '<div>주간 시세 '+esc(STS.data.weeklyUntil)+' 주까지 · 뉴스 점수 '+STS.data.newsWeeks+'주 · 회사 자료 '+(STS.data.stocks?STS.data.stocks.have+'/'+STS.data.stocks.total:'-')+' · 점검 '+(STS.checks.validate.ok?'통과':'<b class="bad">실패</b>')+'</div>'+
+ (STS.triggers&&STS.triggers.length?'<div class="muted">'+STS.triggers.map(t=>esc(t.name)+': '+esc(t.status)+' ('+kst(t.lastRun)+')').join("<br>")+'</div>':'')}
+else $("#status").textContent="아직 현황 기록이 없습니다.";
+if(DT&&(DT.log.length||DT.quotes.length)){const lq=DT.quotes.at(-1);const r=(DT.valueMan/1000-1)*100;
+ $("#dt").innerHTML='<div><b>지금 '+man(DT.valueMan)+'</b> <span class="'+cl(r)+'">'+pc(r)+'</span> · 거래 '+DT.log.length+'건 · 낸 수수료 '+man(DT.feeMan)+(DT.shares?' · 보유 '+DT.shares+'주 (산 값 '+DT.entry.toFixed(2)+'달러)':' · 보유 없음')+'</div>'+
+  (lq?'<div class="muted">마지막 현재가 '+lq.price+'달러 ('+esc(lq.et)+' 미국 동부, '+(lq.live?'장 중':'장 밖')+')</div>':'')+
+  (DT.log.length?'<div class="scroll"><table class="tbl"><tr><th>시각(미국 동부)</th><th>매매</th><th>수량</th><th>가격</th><th>이유</th><th>손익</th></tr>'+DT.log.slice(-15).reverse().map(x=>'<tr><td class="n">'+esc(x.et)+'</td><td class="'+(x.act==="매수"?"up":"down")+'">'+x.act+'</td><td class="n">'+x.shares+'</td><td class="n">'+x.price.toFixed(2)+'</td><td>'+esc(x.why)+'</td><td class="n '+cl(x.profitMan||0)+'">'+(x.profitMan!=null?(x.profitMan>0?"+":"")+x.profitMan.toFixed(1)+"만":"")+'</td></tr>').join("")+'</table></div>':'<div class="muted">아직 거래 없음</div>')}
+else $("#dt").textContent="아직 시작 전입니다. 미국 장이 열리는 시간(한국 시간 밤 11시 30분~새벽 6시)에 첫 기록이 생깁니다.";
+if(RS&&RS.results.length){const ref=RS.results[0].ref;
+ $("#rs").innerHTML='<div class="small muted">시험 '+RS.results.length+'개 · 대기 '+(RS.waiting??"-")+'개 · 기준(1번): 2005년부터 월 '+ref.full.avg.toFixed(2)+'%, 최대 하락 '+ref.full.mdd.toFixed(0)+'%, 2016년부터 월 '+ref.oos.avg.toFixed(2)+'%</div><div class="scroll"><table class="tbl"><tr><th>아이디어</th><th>2005~ 월평균</th><th>최대 하락</th><th>2016~ 월평균</th><th style="text-align:left">판정</th></tr>'+
+ RS.results.slice().reverse().map(x=>'<tr><td style="white-space:normal">'+esc(x.name)+(x.approx?' <span class="small muted">(근사)</span>':'')+'</td><td class="n '+cl(x.full.avg)+'">'+pc(x.full.avg)+'</td><td class="n down">'+x.full.mdd.toFixed(0)+'%</td><td class="n">'+pc(x.oos.avg)+'</td><td style="text-align:left;white-space:normal" class="'+(x.verdict.startsWith("1번보다 나음")?"good":"")+'">'+esc(x.verdict)+'</td></tr>').join("")+'</table></div>'}
+else $("#rs").textContent="아직 시험 기록이 없습니다.";
 const S=Object.fromEntries(M.strategies.map(s=>[s.id,s])),R=Object.fromEntries(A.rows.map(r=>[r.id,r]));const BR=A.rows.filter(x=>!x.noBacktest&&!x.waiting);
 $("#sub").textContent=M.from+" 다음 주부터 시작 · 마지막 자료 "+M.dataUntil+" 주 · 갱신 "+new Date(M.updated).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"});
 // 순위

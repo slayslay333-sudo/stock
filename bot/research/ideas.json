@@ -1,0 +1,248 @@
+{
+ "설명": "연구 대기열. 2번 일(연구·점검)이 실행될 때마다 아직 시험 안 한 것을 2개씩 시험해서 paper/research.json 에 기록한다. 결과가 좋아도 가상계좌 규칙(strategies.json)은 자동으로 바꾸지 않는다 — 사장 확인 후에만 추가. 대기열이 비면 아래 4가지 종류 안에서 새 아이디어를 3개까지 이유와 함께 추가할 수 있다(프로그램 코드 수정 금지).",
+ "종류": {
+  "mix": "기존 전략 번호 여러 개를 똑같이 섞기 (ids)",
+  "voltarget": "전략 하나에 흔들림 맞추기 (id, target=연 % )",
+  "rotate": "1번 규칙에서 바꿀 값만 (params: risk, safe, useSafe, look, trend, stop, rebal, swingW …)",
+  "fixed": "고정 비율 (w: 종목→비율, 합 1) 매달 맞추기"
+ },
+ "ideas": [
+  {
+   "id": "mix-1-4-5",
+   "name": "1·4·5번 3분의 1씩",
+   "why": "서로 다르게 움직이는 전략을 섞으면 떨어지는 폭이 줄어드는지",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     1,
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "id": "mix-1-5-9",
+   "name": "1·5·9번 3분의 1씩",
+   "why": "추세 전략 + 고정 비율 둘을 섞기",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     1,
+     5,
+     9
+    ]
+   }
+  },
+  {
+   "id": "mix-5-9",
+   "name": "5·9번 반반",
+   "why": "고정 비율끼리 섞기",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     5,
+     9
+    ]
+   }
+  },
+  {
+   "id": "mix-1-5",
+   "name": "1·5번 반반",
+   "why": "지금 전략과 나스닥·금 반반",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     1,
+     5
+    ]
+   }
+  },
+  {
+   "id": "mix-4-5",
+   "name": "4·5번 반반",
+   "why": "느린 반응과 나스닥·금 반반",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "id": "mix-all",
+   "name": "1~10번 모두 똑같이",
+   "why": "전부 섞으면",
+   "spec": {
+    "type": "mix",
+    "ids": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  },
+  {
+   "id": "vt-1-16",
+   "name": "1번 + 흔들림 맞추기 16%",
+   "why": "최근 26주 흔들림이 크면 덜 담기",
+   "spec": {
+    "type": "voltarget",
+    "id": 1,
+    "target": 16
+   }
+  },
+  {
+   "id": "vt-5-12",
+   "name": "5번 + 흔들림 맞추기 12%",
+   "why": "",
+   "spec": {
+    "type": "voltarget",
+    "id": 5,
+    "target": 12
+   }
+  },
+  {
+   "id": "vt-5-16",
+   "name": "5번 + 흔들림 맞추기 16%",
+   "why": "",
+   "spec": {
+    "type": "voltarget",
+    "id": 5,
+    "target": 16
+   }
+  },
+  {
+   "id": "vt-10-16",
+   "name": "10번 + 흔들림 맞추기 16%",
+   "why": "나스닥 그냥 보유의 큰 하락을 줄일 수 있는지",
+   "spec": {
+    "type": "voltarget",
+    "id": 10,
+    "target": 16
+   }
+  },
+  {
+   "id": "rot-qqq-gld",
+   "name": "나스닥·금 중 강한 쪽",
+   "why": "1번 규칙에서 후보를 나스닥과 금으로",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "risk": [
+      "QQQ",
+      "GLD"
+     ],
+     "useSafe": false
+    }
+   }
+  },
+  {
+   "id": "rot-qqq-spy-iwm",
+   "name": "나스닥·에스앤피·중소형주 중 강한 쪽",
+   "why": "1번 후보에 중소형주 추가",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "risk": [
+      "QQQ",
+      "SPY",
+      "IWM"
+     ],
+     "useSafe": false
+    }
+   }
+  },
+  {
+   "id": "rot-26-30",
+   "name": "1번을 26주·30주 평균으로",
+   "why": "판단 기간을 중간쯤으로",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "look": 26,
+     "trend": 30
+    }
+   }
+  },
+  {
+   "id": "rot-weekly",
+   "name": "1번을 매주 갈아타기 검토",
+   "why": "갈아타기 주기를 4주→1주",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "rebal": 1
+    }
+   }
+  },
+  {
+   "id": "rot-stop7",
+   "name": "1번 손절 7%",
+   "why": "10% 손절이 한 번도 안 걸려서 7%로",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "stop": 7
+    }
+   }
+  },
+  {
+   "id": "fix-qqq-gld-tlt",
+   "name": "나스닥 50·금 30·장기국채 20",
+   "why": "5번에 채권을 조금",
+   "spec": {
+    "type": "fixed",
+    "w": {
+     "QQQ": 0.5,
+     "GLD": 0.3,
+     "TLT": 0.2
+    }
+   }
+  },
+  {
+   "id": "fix-qqq-gld-6040",
+   "name": "나스닥 60·금 40",
+   "why": "5번 비율 바꾸기",
+   "spec": {
+    "type": "fixed",
+    "w": {
+     "QQQ": 0.6,
+     "GLD": 0.4
+    }
+   }
+  },
+  {
+   "id": "fix-spy-gld",
+   "name": "에스앤피 50·금 50",
+   "why": "5번에서 나스닥 대신 에스앤피 (나스닥을 고른 덕인지 확인)",
+   "spec": {
+    "type": "fixed",
+    "w": {
+     "SPY": 0.5,
+     "GLD": 0.5
+    }
+   }
+  },
+  {
+   "id": "fix-spy-tlt-gld",
+   "name": "에스앤피 40·장기국채 30·금 30",
+   "why": "여러 자산 고르게",
+   "spec": {
+    "type": "fixed",
+    "w": {
+     "SPY": 0.4,
+     "TLT": 0.3,
+     "GLD": 0.3
+    }
+   }
+  }
+ ]
+}

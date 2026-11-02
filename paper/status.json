@@ -1,0 +1,125 @@
+{
+ "updated": "2026-11-02T22:58:22.106Z",
+ "data": {
+  "weeklyUntil": "2026-10-30",
+  "weeklyUpdated": "2026-11-02T12:00:00.000Z",
+  "newsWeeks": 1,
+  "lastNews": {
+   "week": "2026-10-30",
+   "score": -1,
+   "summary": "악재 우세. 대형 기술주 실적·전망 실망(마이크로소프트·알파벳 수요일, 아마존 목요일)과 인공지능 설비 투자로 아마존·알파벳·메타의 남는 현금(잉여현금흐름)이 마이너스로 돌아선 점이 부각됨. 인텔은 실적 전망 실망으로 금요일 약 28% 급락. 나스닥은 금요일 장중 2% 넘게 빠져 약 3개월 만의 최저 근처. 이란 전쟁으로 북해산 원유가 113달러 안팎(전쟁 시작 뒤 범위의 높은 쪽). 연방준비제도는 금리 동결. 전쟁은 올해 초부터 이어지는 것이고 이번 주 새로 터진 시장 전체 위기는 없어 -2는 아님. 주간: 나스닥 추종 약 -2.0%, 에스앤피 추종 약 -0.6%.",
+   "sources": [
+    {
+     "title": "The sell-off for tech stocks worsens and drowns out strength elsewhere on Wall Street (ITV/AP, 10/30)",
+     "url": "https://www.itv.com/news/2026-10-30/the-sell-off-for-tech-stocks-worsens-and-drowns-out-strength-elsewhere-on-wall-street"
+    },
+    {
+     "title": "October 30, 2026 아침 시장 정리 (Investrade)",
+     "url": "https://investrade.com/?p=1686"
+    }
+   ],
+   "scoredAt": "2026-11-02T13:02:30.503707Z",
+   "by": "Claude (수동, 첫 기록)"
+  },
+  "stocks": {
+   "ready": false,
+   "have": 0,
+   "total": 30,
+   "upTo": null
+  }
+ },
+ "checks": {
+  "validate": {
+   "ok": true,
+   "out": "전부 통과"
+  },
+  "kis": {
+   "ok": true,
+   "out": "전부 통과"
+  },
+  "daytrade": {
+   "ok": true,
+   "out": "단타 기록 점검 통과 (거래 0건)"
+  }
+ },
+ "triggers": [
+  {
+   "name": "가상계좌 모의투자 주간 실행",
+   "status": "성공",
+   "lastRun": "2026-10-30T23:44:09Z"
+  }
+ ],
+ "daytrade": null,
+ "research": {
+  "tested": 3,
+  "waiting": 16,
+  "best": [
+   {
+    "name": "1·4·5번 3분의 1씩",
+    "full": {
+     "avg": 0.892,
+     "cagr": 10.24,
+     "mdd": -22.9,
+     "neg": 40
+    },
+    "oos": {
+     "avg": 1.121,
+     "cagr": 13.21,
+     "mdd": -22.8,
+     "neg": 36
+    },
+    "approx": true
+   },
+   {
+    "name": "5·9번 반반",
+    "full": {
+     "avg": 0.914,
+     "cagr": 10.83,
+     "mdd": -26.6,
+     "neg": 35
+    },
+    "oos": {
+     "avg": 1.058,
+     "cagr": 12.95,
+     "mdd": -24.2,
+     "neg": 31
+    },
+    "approx": true
+   },
+   {
+    "name": "1·5·9번 3분의 1씩",
+    "full": {
+     "avg": 0.879,
+     "cagr": 10.34,
+     "mdd": -23.8,
+     "neg": 38
+    },
+    "oos": {
+     "avg": 1.006,
+     "cagr": 12.08,
+     "mdd": -23.1,
+     "neg": 33
+    },
+    "approx": true
+   }
+  ]
+ },
+ "multi": [
+  {
+   "id": 1,
+   "name": "지금 전략",
+   "ret": 0
+  },
+  {
+   "id": 2,
+   "name": "방어형",
+   "ret": 0
+  },
+  {
+   "id": 3,
+   "name": "빠른 반응",
+   "ret": 0
+  }
+ ],
+ "issues": []
+}

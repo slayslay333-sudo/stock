@@ -78,4 +78,10 @@ if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUn
    // 미래 재무: 고른 날 기준 발표 전(마감+90일 안) 분기 자료를 망가뜨려도 그날 선택이 같아야 함
    const i=D.dates.indexOf('2018-06-29');if(i>0){const a=P.pick(S,ST.SYMS,i,D,{...pk.s}).list.join();const S2=JSON.parse(JSON.stringify(S));
      for(const k of Object.keys(S2))for(const q of S2[k].inc)if(q[0]>'2018-03-31')q[3]=-1;ok(a===P.pick(S2,ST.SYMS,i,D,{...pk.s}).list.join()&&a.length>0,'12번 발표 전 재무 자료 안 씀')}}}
+// 9. 단타 모의투자 · 연구 기록
+{const DT=require('./daytrade.js');const e=DT.check(DT.load());ok(!e.length,'단타 기록 현금·수량 검산'+(e.length?': '+e.join(', '):''))}
+{const rp=path.join(__dirname,'..','paper','research.json');if(fs.existsSync(rp)){const r=JSON.parse(fs.readFileSync(rp,'utf8'));const ids=r.results.map(x=>x.id);
+  ok(new Set(ids).size===ids.length&&r.results.every(x=>x.full&&x.oos&&isFinite(x.full.avg)&&isFinite(x.oos.avg)),'연구 기록 '+ids.length+'개 형식·중복 없음')}
+ const q=JSON.parse(fs.readFileSync(path.join(__dirname,'research','ideas.json'),'utf8'));const ok2=q.ideas.every(x=>x.id&&x.spec&&['mix','voltarget','rotate','fixed'].includes(x.spec.type)&&(x.spec.type!=='fixed'||Math.abs(Object.values(x.spec.w).reduce((a,b)=>a+b,0)-1)<1e-9)&&(x.spec.type!=='mix'||x.spec.ids.every(i=>SJ.strategies.some(z=>z.id===i))));
+ ok(ok2&&new Set(q.ideas.map(x=>x.id)).size===q.ideas.length,'연구 대기열 '+q.ideas.length+'개 형식')}
 console.log(fail?'\n문제 '+fail+'개':'\n전부 통과');process.exit(fail?1:0);

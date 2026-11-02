@@ -1,5 +1,5 @@
 // 실수 방지 점검: 문제가 하나라도 있으면 실패(종료 코드 1)
-const fs=require('fs'),path=require('path'),E=require('./engine.js'),NEWS=require('./news.js');
+const fs=require('fs'),path=require('path'),E=require('./engine.js'),NEWS=require('./news.js'),ST=require('./strat.js'),P=require('./picks.js');
 const cfg=JSON.parse(fs.readFileSync(path.join(__dirname,'config.json'),'utf8'));
 const D=JSON.parse(fs.readFileSync(path.join(__dirname,'data','weekly.json'),'utf8'));
 let fail=0;const ok=(c,m)=>{console.log((c?'통과':'실패')+' · '+m);if(!c)fail++};
@@ -46,11 +46,36 @@ for(const id of [5,8]){const s={...SJ.strategies.find(x=>x.id===id).s,from:'2016
  for(const x of r.log){if(x[2]==='매수'){cash-=x[6]*x[4]*(1+fee);sh[x[3]]=(sh[x[3]]||0)+x[6]}else{cash+=x[6]*x[4]*(1-fee-sec);sh[x[3]]-=x[6]}}
  const v=(cash+Object.entries(sh).reduce((a,[k,q])=>a+q*D.assets[k].at(-1)[2],0))/r.fxUsd;ok(Math.abs(v-r.eq.at(-1)[1])<0.01,'고정 비율 현금 흐름 검산 '+v.toFixed(2)+' = 엔진 '+r.eq.at(-1)[1].toFixed(2)+'만원');
  ok(Object.values(sh).every(q=>q>=0)&&r.log.every(x=>Number.isInteger(x[6])&&x[6]>0),'고정 비율: 1주 단위, 보유 수량 마이너스 없음')}
-{let neg=false;for(const x of SJ.strategies){const r=E.runAny(D,{...x.s,from:'2005-01-01'});if(r.sleeves.some(z=>z.cash<-1e-6)||r.eq.some(e=>!(e[1]>0)))neg=true}ok(!neg,'전략 모두 현금 마이너스·0원 이하 없음 (2005년부터)')}
+const stockStatus=ST.status(D);
+{let neg=false;for(const x of SJ.strategies){if(x.s.kind==='picks'&&!stockStatus.ready)continue;const r=ST.run(D,{...x.s,from:'2005-01-01'});if(r.sleeves.some(z=>z.cash<-1e-6)||r.eq.some(e=>!(e[1]>0)))neg=true}ok(!neg,'전략 모두 현금 마이너스·0원 이하 없음 (2005년부터)')}
 const mp=path.join(__dirname,'..','paper','multi.json');
 if(fs.existsSync(mp)){const m=JSON.parse(fs.readFileSync(mp,'utf8'));let good=m.dataUntil===D.dates.at(-1)&&m.strategies.length===SJ.strategies.length;
-  for(const x of SJ.strategies){const r=E.runAny(D,{...NEWS.attach(x.s),from:SJ.from});const v=r.eq.length?r.eq.at(-1)[1]:x.s.start;const st=m.strategies.find(z=>z.id===x.id);if(!st||Math.abs(st.value-v)>0.01)good=false}
+  for(const x of SJ.strategies){if(x.s.kind==='picks'&&!stockStatus.ready){const st=m.strategies.find(z=>z.id===x.id);if(!st||!st.waiting)good=false;continue}const r=ST.run(D,{...x.s,from:x.from||SJ.from});const v=r.eq.length?r.eq.at(-1)[1]:x.s.start;const st=m.strategies.find(z=>z.id===x.id);if(!st||Math.abs(st.value-v)>0.01)good=false}
   ok(good,'전략 '+SJ.strategies.length+'개 가상계좌 저장값과 재계산 일치')}
 const ap=path.join(__dirname,'..','paper','analysis.json');
-if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUntil===D.dates.at(-1)&&a.rows.length===SJ.strategies.length,'분석 자료가 최신 자료 기준')}
+if(fs.existsSync(ap)){const a=JSON.parse(fs.readFileSync(ap,'utf8'));ok(a.dataUntil===D.dates.at(-1)&&a.rows.filter(x=>!x.compareOnly).length===SJ.strategies.length,'분석 자료가 최신 자료 기준')}
+// 8. 12번 재무 전략 · 회사 자료
+{const SL=JSON.parse(fs.readFileSync(path.join(__dirname,'stocks.json'),'utf8')).list;const dir=path.join(__dirname,'data','stocks');
+ const files=fs.existsSync(dir)?fs.readdirSync(dir).filter(f=>f.endsWith('.json')):[];
+ ok(files.every(f=>SL.some(x=>x.sym+'.json'===f)),'회사 자료 파일이 모두 명단 안 회사 ('+files.length+'개)');
+ let fine=true;for(const f of files){const j=JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'));
+   if(j.price&&!j.price.rows.every((r,i,a)=>r.slice(1).every(v=>v>0)&&(i===0||r[0]>a[i-1][0])))fine=false;
+   for(const k of ['inc','bal'])if(j[k]&&!j[k].q.every((r,i,a)=>i===0||r[0]>a[i-1][0]))fine=false}
+ ok(fine,'회사 자료: 날짜 순서·가격이 0보다 큼');
+ console.log('     회사 자료 '+stockStatus.have+'/'+stockStatus.total+(stockStatus.ready?' (12번 계산함, '+stockStatus.upTo+' 주까지)':' (다 모이면 12번 시작)'));
+ const pk=SJ.strategies.find(x=>x.s.kind==='picks');
+ if(pk&&stockStatus.ready){const s={...pk.s,from:'2016-01-01',tax:0};const r=ST.run(D,s);const S=ST.stocks(D);const fee=s.fee/100,sec=s.sec/100;let cash=s.start*r.fxUsd;const sh={};
+   for(const x of r.log){if(x[2]==='매수'){cash-=x[6]*x[4]*(1+fee);sh[x[3]]=(sh[x[3]]||0)+x[6]}else{cash+=x[6]*x[4]*(1-fee-sec);sh[x[3]]-=x[6]}}
+   const last=D.dates.indexOf(r.eq.at(-1)[0]);const lp=k=>{for(let i=last;i>=0;i--)if(S[k].c[i]>0)return S[k].c[i];return 0};
+   const v=(cash+Object.entries(sh).reduce((a,[k,q])=>a+q*lp(k),0))/r.fxUsd;ok(Math.abs(v-r.eq.at(-1)[1])<0.01,'12번 현금 흐름 검산 '+v.toFixed(2)+' = 엔진 '+r.eq.at(-1)[1].toFixed(2)+'만원');
+   ok(r.log.every(x=>Number.isInteger(x[6])&&x[6]>0)&&Object.values(sh).every(q=>q>=0)&&cash>=-1e-6,'12번: 1주 단위, 수량·현금 마이너스 없음');
+   ok(r.log.filter(x=>x[2]==='매수').length>0&&new Set(r.log.filter(x=>x[2]==='매수').map(x=>x[3])).size>=10,'12번: 여러 회사를 실제로 사고팜');
+   // 미래 자료: 주가를 잘라서 다시 돌려도 거래 동일
+   const n2=r.eq.length?D.dates.indexOf(r.eq.at(-1)[0])+1:D.dates.length;let same=true;
+   for(let k=n2-60;k<=n2;k+=13){const Dk={dates:D.dates.slice(0,k),assets:D.assets};const Sk=Object.fromEntries(Object.entries(S).map(([a,v])=>[a,{...v,o:v.o.slice(0,k),l:v.l.slice(0,k),c:v.c.slice(0,k)}]));
+     const rk=P.run(Dk,{...s,universe:ST.SYMS},Sk);if(JSON.stringify(rk.log)!==JSON.stringify(r.log.filter(x=>x[0]<=Dk.dates.at(-1)))){same=false;break}}
+   ok(same,'12번 미래 주가 안 씀');
+   // 미래 재무: 고른 날 기준 발표 전(마감+90일 안) 분기 자료를 망가뜨려도 그날 선택이 같아야 함
+   const i=D.dates.indexOf('2018-06-29');if(i>0){const a=P.pick(S,ST.SYMS,i,D,{...pk.s}).list.join();const S2=JSON.parse(JSON.stringify(S));
+     for(const k of Object.keys(S2))for(const q of S2[k].inc)if(q[0]>'2018-03-31')q[3]=-1;ok(a===P.pick(S2,ST.SYMS,i,D,{...pk.s}).list.join()&&a.length>0,'12번 발표 전 재무 자료 안 씀')}}}
 console.log(fail?'\n문제 '+fail+'개':'\n전부 통과');process.exit(fail?1:0);

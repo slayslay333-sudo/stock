@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-03T13:14:48.367Z",
+ "updated": "2026-11-03T21:16:00.633Z",
  "data": {
   "weeklyUntil": "2026-10-30",
   "weeklyUpdated": "2026-11-02T12:00:00.000Z",
@@ -46,7 +46,7 @@
   {
    "name": "순환 작업 (단타·연구·현황, 1시간마다)",
    "status": "실행 중 (지금 이 실행)",
-   "lastRun": "2026-11-03T13:14:17.101244Z"
+   "lastRun": "2026-11-03T21:13:59.619704Z"
   },
   {
    "name": "다우 30개 회사 자료 받기 (12번 전략)",
@@ -64,10 +64,23 @@
    "lastRun": "2026-11-03T00:36:57.459810Z"
   }
  ],
- "daytrade": null,
+ "daytrade": {
+  "valueMan": 1000,
+  "trades": 0,
+  "holding": 0,
+  "lastQuote": {
+   "at": "2026-11-03T20:15:47.651Z",
+   "et": "2026-11-03 15:15",
+   "latestDay": "2026-11-02",
+   "price": 681.09,
+   "open": 695.315,
+   "prevClose": 690.49,
+   "live": false
+  }
+ },
  "research": {
-  "tested": 15,
-  "waiting": 4,
+  "tested": 17,
+  "waiting": 2,
   "best": [
    {
     "name": "5번 + 흔들림 맞추기 16%",
@@ -102,20 +115,20 @@
     "approx": true
    },
    {
-    "name": "1·5번 반반",
+    "name": "나스닥 50·금 30·장기국채 20",
     "full": {
-     "avg": 0.968,
-     "cagr": 11.27,
-     "mdd": -22.8,
-     "neg": 38
+     "avg": 0.992,
+     "cagr": 11.74,
+     "mdd": -27.6,
+     "neg": 35
     },
     "oos": {
-     "avg": 1.125,
-     "cagr": 13.43,
-     "mdd": -22,
-     "neg": 36
+     "avg": 1.142,
+     "cagr": 13.74,
+     "mdd": -27.2,
+     "neg": 31
     },
-    "approx": true
+    "approx": false
    }
   ]
  },

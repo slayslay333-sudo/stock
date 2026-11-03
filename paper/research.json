@@ -466,10 +466,98 @@
     }
    },
    "verdict": "1번보다 나쁨"
+  },
+  {
+   "id": "rot-qqq-spy-iwm",
+   "name": "나스닥·에스앤피·중소형주 중 강한 쪽",
+   "why": "1번 후보에 중소형주 추가",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "risk": [
+      "QQQ",
+      "SPY",
+      "IWM"
+     ],
+     "useSafe": false
+    }
+   },
+   "approx": false,
+   "testedAt": "2026-11-03T08:14:32.791Z",
+   "dataUntil": "2026-10-30",
+   "full": {
+    "avg": 0.662,
+    "cagr": 6.9,
+    "mdd": -36.2,
+    "neg": 35
+   },
+   "oos": {
+    "avg": 0.787,
+    "cagr": 8.32,
+    "mdd": -25.6,
+    "neg": 34
+   },
+   "ref": {
+    "full": {
+     "avg": 0.811,
+     "cagr": 8.82,
+     "mdd": -28.4,
+     "neg": 33
+    },
+    "oos": {
+     "avg": 0.904,
+     "cagr": 9.84,
+     "mdd": -26.9,
+     "neg": 34
+    }
+   },
+   "verdict": "1번보다 나쁨"
+  },
+  {
+   "id": "rot-26-30",
+   "name": "1번을 26주·30주 평균으로",
+   "why": "판단 기간을 중간쯤으로",
+   "spec": {
+    "type": "rotate",
+    "params": {
+     "look": 26,
+     "trend": 30
+    }
+   },
+   "approx": false,
+   "testedAt": "2026-11-03T08:14:32.822Z",
+   "dataUntil": "2026-10-30",
+   "full": {
+    "avg": 0.698,
+    "cagr": 7.47,
+    "mdd": -33,
+    "neg": 35
+   },
+   "oos": {
+    "avg": 0.913,
+    "cagr": 10.14,
+    "mdd": -26.2,
+    "neg": 32
+   },
+   "ref": {
+    "full": {
+     "avg": 0.811,
+     "cagr": 8.82,
+     "mdd": -28.4,
+     "neg": 33
+    },
+    "oos": {
+     "avg": 0.904,
+     "cagr": 9.84,
+     "mdd": -26.9,
+     "neg": 34
+    }
+   },
+   "verdict": "1번보다 나쁨"
   }
  ],
- "updated": "2026-11-03T06:13:37.021Z",
- "tested": 11,
- "waiting": 8,
+ "updated": "2026-11-03T08:14:32.828Z",
+ "tested": 13,
+ "waiting": 6,
  "note": "시험한 아이디어가 많을수록 운 좋게 잘 나온 것이 섞일 가능성이 커진다. 좋은 결과도 가상계좌로 몇 달 확인한 뒤에 쓴다."
 }

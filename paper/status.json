@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-05T03:13:55.574Z",
+ "updated": "2026-11-05T05:13:39.631Z",
  "data": {
   "weeklyUntil": "2026-10-30",
   "weeklyUpdated": "2026-11-02T12:00:00.000Z",
@@ -46,7 +46,7 @@
   {
    "name": "순환 작업 (단타·연구·현황, 1시간마다)",
    "status": "ROUTINE_RUN_STATUS_PENDING",
-   "lastRun": "2026-11-05T03:13:09.897169Z"
+   "lastRun": "2026-11-05T05:13:16.336211Z"
   },
   {
    "name": "다우 30개 회사 자료 받기 (12번 전략)",
@@ -79,7 +79,7 @@
   }
  },
  "research": {
-  "tested": 34,
+  "tested": 37,
   "waiting": 0,
   "best": [
    {

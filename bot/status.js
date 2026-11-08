@@ -10,7 +10,7 @@ const v=run('node validate.js'),k=run('node test_kis.js'),dt=run('node daytrade.
 const age=d=>d?Math.round((Date.now()-new Date(d))/864e5):null;
 const issues=[];
 if(!v.ok)issues.push('실수 방지 점검 실패: '+v.out);if(!k.ok)issues.push('한투 연결 시험 실패: '+k.out);if(!dt.ok)issues.push('단타 기록 점검 실패: '+dt.out);
-const last=D.dates.at(-1);if(age(last)>9)issues.push('주간 시세가 '+age(last)+'일 전 것 ('+last+')');
+const last=D.dates.at(-1);if(age(last)>8)issues.push('주간 시세가 '+age(last)+'일 전 것 ('+last+')');
 for(const t of trig)if(t.status&&!/성공|실행 중|PENDING|RUNNING|아직 실행 안 됨/.test(t.status))issues.push('예약 작업 "'+t.name+'" 마지막 실행: '+t.status);
 const best=RS.results.filter(r=>r.verdict&&r.verdict.startsWith('1번보다 나음')).sort((a,b)=>b.oos.avg-a.oos.avg).slice(0,3).map(r=>({name:r.name,full:r.full,oos:r.oos,approx:r.approx}));
 const st={updated:new Date().toISOString(),

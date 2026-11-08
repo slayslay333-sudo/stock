@@ -21,13 +21,18 @@ function eqFor(spec,from){
   throw new Error('모르는 종류: '+spec.type)}
 const sum=eq=>{const s=E.stats(eq);return {avg:+s.avg.toFixed(3),cagr:+s.cagr.toFixed(2),mdd:+s.mdd.toFixed(1),neg:+s.neg.toFixed(0)}};
 const ref={full:sum(runId(1,F).eq),oos:sum(runId(1,OOS).eq)};
-const done=new Set(res.results.map(r=>r.id));const todo=Q.ideas.filter(x=>!done.has(x.id)).slice(0,n);
-if(!todo.length){console.log('대기열 비었음 (시험 '+res.results.length+'개 완료)');process.exit(0)}
+// 11번은 과거 뉴스 점수가 없어 1번과 똑같이 계산되므로 섞어도 의미 없음 → 제외. 12번은 회사 자료가 다 모이기 전엔 계산 불가 → 보류.
+const ready12=ST.status(D).ready;
+const uses=(sp,id)=>(sp.ids||[]).includes(id)||sp.id===id;
+const blocked=x=>uses(x.spec,11)?'11번은 과거 시험 불가(1번과 같은 결과)라 제외':(uses(x.spec,12)&&!ready12?'12번 회사 자료가 다 모이면 시험':null);
+const done=new Set(res.results.map(r=>r.id));const todo=Q.ideas.filter(x=>!done.has(x.id)&&!blocked(x)).slice(0,n);
+res.skipped=Q.ideas.filter(x=>!done.has(x.id)&&blocked(x)).map(x=>({id:x.id,name:x.name,why:blocked(x)}));
+if(!todo.length){fs.writeFileSync(OUT,JSON.stringify(res,null,1));console.log('대기열 비었음 (시험 '+res.results.length+'개 완료'+(res.skipped.length?', 보류·제외 '+res.skipped.length+'개':'')+')');process.exit(0)}
 for(const x of todo){const full=sum(eqFor(x.spec,F)),oos=sum(eqFor(x.spec,OOS));
   const better=full.avg>=ref.full.avg&&oos.avg>=ref.oos.avg&&full.mdd>=ref.full.mdd-3;
   const verdict=better?'1번보다 나음 (수익 비슷하거나 높고 하락 폭 비슷하거나 작음)':(full.mdd>ref.full.mdd+3&&full.avg>=ref.full.avg-0.1?'하락 폭은 줄었지만 수익은 비슷하거나 낮음':'1번보다 나쁨');
   res.results.push({id:x.id,name:x.name,why:x.why,spec:x.spec,approx:['mix','voltarget'].includes(x.spec.type),testedAt:new Date().toISOString(),dataUntil:T.at(-1),full,oos,ref,verdict});
   console.log(x.name+': 2005~ 월 '+full.avg+'% 낙폭 '+full.mdd+'% | 2016~ 월 '+oos.avg+'% → '+verdict)}
-res.updated=new Date().toISOString();res.tested=res.results.length;res.waiting=Q.ideas.length-res.results.length;
+res.updated=new Date().toISOString();res.tested=res.results.length;res.waiting=Q.ideas.length-res.results.length-res.skipped.length;
 res.note='시험한 아이디어가 많을수록 운 좋게 잘 나온 것이 섞일 가능성이 커진다. 좋은 결과도 가상계좌로 몇 달 확인한 뒤에 쓴다.';
 fs.writeFileSync(OUT,JSON.stringify(res,null,1));

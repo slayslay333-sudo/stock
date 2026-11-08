@@ -70,7 +70,7 @@ nav.top{display:flex;gap:14px;font-size:13px}nav.top a{color:var(--muted);text-d
   <div class="help">줄을 누르면 전략 설명·가진 종목·다음 주 주문·거래 기록이 보입니다. 시작한 지 얼마 안 돼서 지금 순위는 거의 운입니다. 아래 과거 분석과 함께 보세요.</div></section>
 
  <section class="card"><h2>현황 <span class="small muted" id="stTime"></span></h2><div id="status" class="small"></div>
-  <div class="help">1시간마다 세 가지 일을 돌아가며 합니다(예약 작업 최소 간격이 1시간): 미국 장 시간(한국 시간 밤 11시 30분~새벽 6시, 서머타임 땐 1시간 빠름)에는 ① 단타 모의투자, 그 밖의 시간에는 ② 새 아이디어 시험·실수 점검과 ③ 현황 정리(이 칸)를 번갈아 합니다.</div></section>
+  <div class="help">1시간마다 ② 새 아이디어 시험·실수 점검과 ③ 현황 정리(이 칸)를 번갈아 합니다(예약 작업 최소 간격이 1시간). ① 단타 모의투자는 무료 현재가가 하루 늦은 값이라 11월 8일 중단했습니다.</div></section>
 
  <section class="card"><h2>① 단타 모의투자 (실험 · 나스닥 추종 하나)</h2><div id="dt" class="small"></div>
   <details class="help"><summary>규칙</summary><p>미국 동부 시간 10:30~15:00 사이, 나스닥 추종 현재가가 그날 시가보다 0.3% 넘게 높고 어제 종가보다 높으면 가진 돈 전부로 삽니다(하루 한 번). 산 값보다 1% 떨어지면 손절, 2% 오르면 익절, 15:00 이후에는 무조건 팔아서 밤을 넘기지 않습니다. 수수료 0.25%(사고팔 때 각각)와 체결가 0.05% 불리함을 반영합니다. 무료 자료로는 30분 단위 과거 시세를 받을 수 없어(유료 전용) 과거 시험을 못 했고, 1시간마다의 현재가로만 판단합니다.</p></details></section>
@@ -118,7 +118,7 @@ if(STS){$("#stTime").textContent="· "+kst(STS.updated)+" 갱신";
  (STS.triggers&&STS.triggers.length?'<div class="muted">'+STS.triggers.map(t=>esc(t.name)+': '+esc(t.status)+' ('+kst(t.lastRun)+')').join("<br>")+'</div>':'')}
 else $("#status").textContent="아직 현황 기록이 없습니다.";
 if(DT&&(DT.log.length||DT.quotes.length)){const lq=DT.quotes.at(-1);const r=(DT.valueMan/1000-1)*100;
- $("#dt").innerHTML='<div><b>지금 '+man(DT.valueMan)+'</b> <span class="'+cl(r)+'">'+pc(r)+'</span> · 거래 '+DT.log.length+'건 · 낸 수수료 '+man(DT.feeMan)+(DT.shares?' · 보유 '+DT.shares+'주 (산 값 '+DT.entry.toFixed(2)+'달러)':' · 보유 없음')+'</div>'+
+ $("#dt").innerHTML=(DT.stopped?'<div class="note"><b>중단됨.</b> '+esc(DT.stopped)+'</div>':'')+'<div><b>지금 '+man(DT.valueMan)+'</b> <span class="'+cl(r)+'">'+pc(r)+'</span> · 거래 '+DT.log.length+'건 · 낸 수수료 '+man(DT.feeMan)+(DT.shares?' · 보유 '+DT.shares+'주 (산 값 '+DT.entry.toFixed(2)+'달러)':' · 보유 없음')+'</div>'+
   (lq?'<div class="muted">마지막 현재가 '+lq.price+'달러 ('+esc(lq.et)+' 미국 동부, '+(lq.live?'장 중':'장 밖')+')</div>':'')+
   (DT.log.length?'<div class="scroll"><table class="tbl"><tr><th>시각(미국 동부)</th><th>매매</th><th>수량</th><th>가격</th><th>이유</th><th>손익</th></tr>'+DT.log.slice(-15).reverse().map(x=>'<tr><td class="n">'+esc(x.et)+'</td><td class="'+(x.act==="매수"?"up":"down")+'">'+x.act+'</td><td class="n">'+x.shares+'</td><td class="n">'+x.price.toFixed(2)+'</td><td>'+esc(x.why)+'</td><td class="n '+cl(x.profitMan||0)+'">'+(x.profitMan!=null?(x.profitMan>0?"+":"")+x.profitMan.toFixed(1)+"만":"")+'</td></tr>').join("")+'</table></div>':'<div class="muted">아직 거래 없음</div>')}
 else $("#dt").textContent="아직 시작 전입니다. 미국 장이 열리는 시간(한국 시간 밤 11시 30분~새벽 6시)에 첫 기록이 생깁니다.";
